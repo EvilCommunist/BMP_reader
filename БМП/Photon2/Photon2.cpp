@@ -11,11 +11,11 @@ int main()
     size_t height, width, h, w;
     width = height = h= w = 0;
     //string picture = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\lenna.bmp";
-    string picture = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\testtest.bmp";
+    string picture = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\Lenna.bmp";
     fstream pic;
     pic.open(picture, pic.binary | pic.in);
     //string numfile = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\younoturrr.txt";
-    string numfile = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\testtest.txt";
+    string numfile = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\younoturrr.txt";
     fstream file;
     file.open(numfile, file.out);
     cnt = counter = size = 0;
@@ -91,6 +91,8 @@ int main()
     file << "Кол-во ячеек от таблицы цветов до неё самой: " << col << endl << "Заметим, что в данном случае цвета записаны в обратном порядке" << endl << endl << "Ниже представлена кодировка цветов:" << endl;
     //Можно сделать универсальное прочтение файла с помощью добавления условного счётчика типа "cond", но в данном случае принимаем "динамическое" прочтение BMP файла
     size = width*bpp/8;
+    long sizech = size;
+    cout << size;
     for (h=0; h<height; h++) //Непосредственно считывание кодировки цветов
     {
         for (w=0; w<width; w++)
@@ -108,17 +110,18 @@ int main()
                     i += 1;
                 }
               file << ") ";
-              size -= 3;
+              sizech -= 3;
             }
             else
             {
-                while (size > 0) // Пропуск "дополненных" байтов
+                while (sizech > 0) // Пропуск "дополненных" байтов
                 {
                     pic.read(reinterpret_cast<char*>(&colour), sizeof(colour));
-                    size -= 1;
+                    sizech -= 1;
                 }
             }
         }
         w = 0;
+        sizech = size;
     }
 }
