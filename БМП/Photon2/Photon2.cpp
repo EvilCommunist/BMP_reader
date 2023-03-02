@@ -11,11 +11,11 @@ int main()
     size_t height, width, h, w;
     width = height = h= w = 0;
     //string picture = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\lenna.bmp";
-    string picture = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\Lenna.bmp";
+    string picture = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\test2.bmp";
     fstream pic;
     pic.open(picture, pic.binary | pic.in);
     //string numfile = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\younoturrr.txt";
-    string numfile = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\younoturrr.txt";
+    string numfile = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\test2.txt";
     fstream file;
     file.open(numfile, file.out);
     cnt = counter = size = 0;
@@ -92,19 +92,19 @@ int main()
     //Можно сделать универсальное прочтение файла с помощью добавления условного счётчика типа "cond", но в данном случае принимаем "динамическое" прочтение BMP файла
     size = width*bpp/8;
     long sizech = size;
-    cout << size;
+    short int ost = size % 3;
     for (h=0; h<height; h++) //Непосредственно считывание кодировки цветов
     {
         for (w=0; w<width; w++)
         {
-            if(size>2)
+            if(sizech>ost)
             { 
                 i = 0;
                 file << "(";
                 while (i < 3)
                 {
                     pic.read(reinterpret_cast<char*>(&colour), sizeof(colour));
-                    file << hex << (long)colour;
+                    file << hex << (long)colour; //hex << украл для вывода десятичных формул.
                     if (i < 2)
                         file << ",";
                     i += 1;
@@ -114,7 +114,7 @@ int main()
             }
             else
             {
-                while (sizech > 0) // Пропуск "дополненных" байтов
+                while (sizech >= 0) // Пропуск "дополненных" байтов
                 {
                     pic.read(reinterpret_cast<char*>(&colour), sizeof(colour));
                     sizech -= 1;
