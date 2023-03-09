@@ -19,23 +19,23 @@ int main()
     {
         if (cnt < 1)
             file << "Сигнатура: ";
-        pic.read(reinterpret_cast<char*>(&word), sizeof(word));
+        pic.read(reinterpret_cast<char*>(&word), sizeof(uint8_t));
         file << (char)word;
         cnt += 1;
     }
     uint32_t bytesize;
     // Прочтение размера
-    pic.read(reinterpret_cast<char*>(&bytesize), sizeof(uint8_t));
+    pic.read(reinterpret_cast<char*>(&bytesize), sizeof(bytesize));
     file << endl << "Размер файла (байт): " << bytesize << endl;
     while (cnt < 6) // Проверка нулевых полей
     {
         pic.read(reinterpret_cast<char*>(&word), sizeof(uint8_t));
-        file << "Зарезервированное поле " << cnt - 2 << " (проверка, длжно быть 0): " << word << endl;
+        file << "Зарезервированное поле " << cnt - 1 << " (проверка, длжно быть 0): " << (uint8_t)word << endl; // Вот здесь вылезает ошибка (без использования костылей)
         cnt += 1;
     }
     uint32_t changeplace;
     // Прочтение смещения
-    pic.read(reinterpret_cast<char*>(&changeplace), sizeof(uint8_t));
+    pic.read(reinterpret_cast<char*>(&changeplace), sizeof(changeplace));
     file << "Смещение (в байтах): " << changeplace << endl << endl;
     uint32_t struck;
     // Прочтение структуры
