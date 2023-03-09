@@ -27,19 +27,19 @@ int main()
     // Прочтение размера
     pic.read(reinterpret_cast<char*>(&bytesize), sizeof(bytesize));
     file << endl << "Размер файла (байт): " << bytesize << endl;
-    while (cnt < 6) // Проверка нулевых полей
+    while (cnt < 4) // Проверка нулевых полей
     {
         pic.read(reinterpret_cast<char*>(&word), sizeof(uint8_t));
-        file << "Зарезервированное поле " << cnt - 1 << " (проверка, длжно быть 0): " << (uint8_t)word << endl; // Вот здесь вылезает ошибка (без использования костылей)
+        file << "Зарезервированное поле " << cnt - 1 << " (проверка, длжно быть 0): " << (uint8_t)word << endl; 
         cnt += 1;
     }
     uint32_t changeplace;
     // Прочтение смещения
-    pic.read(reinterpret_cast<char*>(&changeplace), sizeof(changeplace));
+    pic.read(reinterpret_cast<char*>(&changeplace), sizeof(changeplace)); // Вот здесь вылезает ошибка
     file << "Смещение (в байтах): " << changeplace << endl << endl;
     uint32_t struck;
     // Прочтение структуры
-    pic.read(reinterpret_cast<char*>(&struck), sizeof(uint8_t));
+    pic.read(reinterpret_cast<char*>(&struck), sizeof(struck));
     file << "Размер (в битах) структуры: " << struck << endl;
     // Определение типа структуры
     switch (struck)
@@ -51,40 +51,40 @@ int main()
     }
     long height, width;
     // Прочтение высоты
-    pic.read(reinterpret_cast<char*>(&height), sizeof(uint8_t));
+    pic.read(reinterpret_cast<char*>(&height), sizeof(height));
     file << "Высота (в пикселях): " << height << endl;
     // Прочтение ширины
-    pic.read(reinterpret_cast<char*>(&width), sizeof(uint8_t));
+    pic.read(reinterpret_cast<char*>(&width), sizeof(width));
     file << "Ширина (в пикселях): " << width << endl;
     // Прочтение "курсора"
-    pic.read(reinterpret_cast<char*>(&word), sizeof(uint8_t));
+    pic.read(reinterpret_cast<char*>(&word), sizeof(word));
     file << "Проверка курсора (должно быть 1): " << word << endl;
     uint16_t bpp;
     // Прочтение количества бит на пискель
-    pic.read(reinterpret_cast<char*>(&bpp), sizeof(uint8_t));
+    pic.read(reinterpret_cast<char*>(&bpp), sizeof(bpp));
     file << "Число бит на пиксель: " << bpp << endl;
     uint32_t savepic;
     // Прочтение способа хранения пикселей
-    pic.read(reinterpret_cast<char*>(&savepic), sizeof(uint8_t));
+    pic.read(reinterpret_cast<char*>(&savepic), sizeof(savepic));
     file << "Способ хранения пикселей: " << savepic << "   ///   BI_RGB (двумерный массив)" << endl; // В данном случае мы имеем способ BI_RGB (двумерный массив), примем это за факт.
     uint32_t picdata;
     // Прочтение размера пиксельных данных в байт
-    pic.read(reinterpret_cast<char*>(&picdata), sizeof(uint8_t));
+    pic.read(reinterpret_cast<char*>(&picdata), sizeof(picdata));
     file << "Размер пиксельных данных в байт: " << picdata << endl;
     long horpicpm, vertpicpm;
     // Прочтение кол-ва пикселей на метр по горизонтали
-    pic.read(reinterpret_cast<char*>(&horpicpm), sizeof(uint8_t));
+    pic.read(reinterpret_cast<char*>(&horpicpm), sizeof(horpicpm));
     file << "Кол-во пикселей на метр по горизонту: " << horpicpm << endl;
     // Прочтение кол-ва пикселей на метр по вертикали
-    pic.read(reinterpret_cast<char*>(&vertpicpm), sizeof(uint8_t));
+    pic.read(reinterpret_cast<char*>(&vertpicpm), sizeof(vertpicpm));
     file << "Кол-во пикскелей на метр по вертикали: " << vertpicpm << endl;
     uint32_t sizecolour;
     // Прочтение размера таблицы цветов
-    pic.read(reinterpret_cast<char*>(&sizecolour), sizeof(uint8_t));
+    pic.read(reinterpret_cast<char*>(&sizecolour), sizeof(sizecolour));
     file << "Размер таблицы цветов: " << sizecolour << endl;
     uint32_t lenghtcol;
     // Прочтение кол-ва ячеек от таблицы цветов до неё самой
-    pic.read(reinterpret_cast<char*>(&lenghtcol), sizeof(uint8_t));
+    pic.read(reinterpret_cast<char*>(&lenghtcol), sizeof(lenghtcol));
     file << "Кол-во ячеек от таблицы цветов до неё самой: " << lenghtcol << endl << "Заметим, что в данном случае цвета записаны в обратном порядке" << endl << endl << "Ниже представлена кодировка цветов:" << endl;
     //Можно сделать универсальное прочтение файла с помощью добавления условного счётчика типа "cond", но в данном случае принимаем "динамическое" прочтение BMP файла
     long size, h, w, i;
