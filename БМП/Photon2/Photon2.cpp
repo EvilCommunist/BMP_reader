@@ -1,5 +1,4 @@
-﻿// Всё хуйня, переделывать
-#include<iostream>
+﻿#include<iostream>
 #include<fstream>
 using namespace std;
 int main()
