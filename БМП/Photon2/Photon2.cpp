@@ -93,7 +93,7 @@ int main()
     short int emtybytes = 4;
     short int ost = size % emtybytes;
     uint8_t colour;
-    for (h=0; h<height; h++) //Непосредственно считывание кодировки цветов
+    for (h=0; h<height; h++) //Непосредственно считывание кодировки цветов, алгоритм неверный, пока не переделывал.
     {
         for (w=0; w<width; w++)
         {
@@ -104,7 +104,7 @@ int main()
                 while (i < 3)
                 {
                     pic.read(reinterpret_cast<char*>(&colour), sizeof(colour));
-                    file << hex << (long)colour; //hex << украл для вывода десятичных формул.
+                    file << hex << (long)colour; //hex << убрал для вывода десятичных формул.
                     if (i < 2)
                         file << ",";
                     i += 1;
