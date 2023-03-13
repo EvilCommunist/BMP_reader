@@ -25,6 +25,14 @@ T read(std::ifstream& stream) {
     return tmp;
 }
 
+
+template <class T>
+T printNextField(std::ifstream& stream, std::ostream& output, const char* name) {
+    const auto val = read<T>(stream);
+    output << name << ": " << val << std::endl;
+    return val;
+}
+
 /**
  * Ленюсь писать полный комментарий. Но очень желательно. Обрати внимание, возвращаемый тип описал,
  * т.к. он вовсе неочевиден из названия
@@ -36,14 +44,12 @@ uint32_t dumpFileHeader(std::ifstream& input, std::ostream& output) {
     const auto sign = read<std::array<uint8_t, 2>>(input);
     output << "Сигнатура: " << sign.front() << sign.back() << std::endl;
 
-    output << "Размер файла (байт): " << read<uint32_t>(input) << std::endl;
+    printNextField<uint32_t>(input, output, "Размер файла (байт)");
 
     const auto reserved = read<std::array<uint16_t, 2>>(input);
     output << "Зарезервированные поля (ожидается 0): " << reserved.front() << " " << reserved.back() << std::endl;
 
-    const auto offset = read<uint32_t>(input);
-    output << "Смещение (в байтах): " << offset << std::endl;
-    return offset;
+    return printNextField<uint32_t>(input, output, "Смещение (в байтах)");
 }
 
 struct Size {
@@ -52,24 +58,20 @@ struct Size {
 };
 
 Size dumpBitmapInfo(std::ifstream& input, std::ostream& output) {
-    const auto structSize = read<uint32_t>(input);
-    output << "Размер (в байтах) структуры: " << structSize << std::endl;
+    printNextField<uint32_t>(input, output, "Размер (в байтах) структуры");
 
     //TODO: check core/3/4/5
     // Сначала - ширина. У тебя было наоборот
-    const auto width = read<int32_t>(input);
-    const auto height = read<int32_t>(input);
-    output << "width x height: " << width << " " << height << std::endl;
-
-    output << "Проверка курсора (должно быть 1): " << read<uint16_t>(input) << std::endl;
-    output << "Число бит на пиксель: " << read<uint16_t>(input) << std::endl;
-    output << "Способ хранения пикселей (должно быть 0): " << read<uint16_t>(input) << std::endl;
-    output << "Размер пиксельных данных (или 0), байт: " << read<uint32_t>(input) << std::endl;
-
-    output << "Кол-во пикселей на метр (x, y)" << read<int32_t>(input) << " " << read<int32_t>(input) << std::endl;
-
-    output << "Размер таблицы цветов " << read<uint32_t>(input) << std::endl;
-    output << "Количество ячеек от начала таблицы цветов до последней используемой " << read<uint32_t>(input) << std::endl;
+    const auto width = printNextField<int32_t>(input, output, "width");
+    const auto height = printNextField<int32_t>(input, output, "height");
+    printNextField<uint16_t>(input, output, "Проверка курсора (должно быть 1)");
+    printNextField<uint16_t>(input, output, "Число бит на пиксель");
+    printNextField<uint32_t>(input, output, "Способ хранения пикселей (должно быть 0)");
+    printNextField<uint32_t>(input, output, "Размер пиксельных данных (или 0), байт");
+    printNextField<int32_t>(input, output, "Кол-во пикселей на метр (x)");
+    printNextField<int32_t>(input, output, "Кол-во пикселей на метр (y)");
+    printNextField<uint32_t>(input, output, "Размер таблицы цветов");
+    printNextField<uint32_t>(input, output, "Количество ячеек от начала таблицы цветов до последней используемой");
     return {width, height};
 }
 
