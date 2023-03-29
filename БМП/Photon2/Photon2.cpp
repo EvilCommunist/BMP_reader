@@ -1,128 +1,124 @@
-﻿#include<iostream>
-#include<fstream>
-using namespace std;
-int main()
-{
-    setlocale(LC_CTYPE, "Russian");
-    //string picture = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\lenna.bmp";
-    string picture = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\test2.bmp";
-    fstream pic;   
-    pic.open(picture, pic.binary | pic.in);
-    //string numfile = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\younoturrr.txt";
-    string numfile = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\test2.txt";
-    fstream file;
-    file.open(numfile, file.out);
-    short int cnt; // Вспомогательный счётчик для считывания однотипных данных несколько раз подряд
-    cnt = 0;
-    uint16_t word; // Вспомогательная перееменная для прочтения данных типа WORD 
-    while (cnt < 2) // Прочтение сигнатуры
-    {
-        if (cnt < 1)
-            file << "Сигнатура: ";
-        pic.read(reinterpret_cast<char*>(&word), sizeof(uint8_t));
-        file << (char)word;
-        cnt += 1;
+﻿#include <iostream>
+#include <fstream>
+#include <array>
+#include <iterator>
+#include <windows.h>
+#include <TCHAR.h>
+
+using byte = unsigned char;
+
+void readBytes(std::ifstream& stream, byte* begin, std::streamsize count) {
+    bool success{};
+
+    if (stream.read(reinterpret_cast<char*>(begin), count)) {
+        success = stream.gcount() == count;
     }
-    uint32_t bytesize;
-    // Прочтение размера
-    pic.read(reinterpret_cast<char*>(&bytesize), sizeof(bytesize));
-    file << endl << "Размер файла (байт): " << bytesize << endl;
-    while (cnt < 4) // Проверка нулевых полей
-    {
-        pic.read(reinterpret_cast<char*>(&word), sizeof(uint8_t));
-        file << "Зарезервированное поле " << cnt - 1 << " (проверка, длжно быть 0): " << (uint8_t)word << endl; 
-        cnt += 1;
-    }
-    uint32_t changeplace;
-    // Прочтение смещения
-    pic.read(reinterpret_cast<char*>(&changeplace), sizeof(changeplace)); // Вот здесь вылезает ошибка
-    file << "Смещение (в байтах): " << changeplace << endl << endl;
-    uint32_t struck;
-    // Прочтение структуры
-    pic.read(reinterpret_cast<char*>(&struck), sizeof(struck));
-    file << "Размер (в битах) структуры: " << struck << endl;
-    // Определение типа структуры
-    switch (struck)
-    {
-    case 12: file << "Имя структуры: BITMAPCOREHEADER" << endl; break;
-    case 40: file << "Имя структуры: BITMAPINFOHEADER" << endl; break;
-    case 108: file << "Имя структуры: BITMAPV4HEADER" << endl; break;
-    case 124: file << "Имя структуры: BITMAPV5HEADER" << endl; break;
-    }
-    long height, width;
-    // Прочтение высоты
-    pic.read(reinterpret_cast<char*>(&height), sizeof(height));
-    file << "Высота (в пикселях): " << height << endl;
-    // Прочтение ширины
-    pic.read(reinterpret_cast<char*>(&width), sizeof(width));
-    file << "Ширина (в пикселях): " << width << endl;
-    // Прочтение "курсора"
-    pic.read(reinterpret_cast<char*>(&word), sizeof(word));
-    file << "Проверка курсора (должно быть 1): " << word << endl;
-    uint16_t bpp;
-    // Прочтение количества бит на пискель
-    pic.read(reinterpret_cast<char*>(&bpp), sizeof(bpp));
-    file << "Число бит на пиксель: " << bpp << endl;
-    uint32_t savepic;
-    // Прочтение способа хранения пикселей
-    pic.read(reinterpret_cast<char*>(&savepic), sizeof(savepic));
-    file << "Способ хранения пикселей: " << savepic << "   ///   BI_RGB (двумерный массив)" << endl; // В данном случае мы имеем способ BI_RGB (двумерный массив), примем это за факт.
-    uint32_t picdata;
-    // Прочтение размера пиксельных данных в байт
-    pic.read(reinterpret_cast<char*>(&picdata), sizeof(picdata));
-    file << "Размер пиксельных данных в байт: " << picdata << endl;
-    long horpicpm, vertpicpm;
-    // Прочтение кол-ва пикселей на метр по горизонтали
-    pic.read(reinterpret_cast<char*>(&horpicpm), sizeof(horpicpm));
-    file << "Кол-во пикселей на метр по горизонту: " << horpicpm << endl;
-    // Прочтение кол-ва пикселей на метр по вертикали
-    pic.read(reinterpret_cast<char*>(&vertpicpm), sizeof(vertpicpm));
-    file << "Кол-во пикскелей на метр по вертикали: " << vertpicpm << endl;
-    uint32_t sizecolour;
-    // Прочтение размера таблицы цветов
-    pic.read(reinterpret_cast<char*>(&sizecolour), sizeof(sizecolour));
-    file << "Размер таблицы цветов: " << sizecolour << endl;
-    uint32_t lenghtcol;
-    // Прочтение кол-ва ячеек от таблицы цветов до неё самой
-    pic.read(reinterpret_cast<char*>(&lenghtcol), sizeof(lenghtcol));
-    file << "Кол-во ячеек от таблицы цветов до неё самой: " << lenghtcol << endl << "Заметим, что в данном случае цвета записаны в обратном порядке" << endl << endl << "Ниже представлена кодировка цветов:" << endl;
-    //Можно сделать универсальное прочтение файла с помощью добавления условного счётчика типа "cond", но в данном случае принимаем "динамическое" прочтение BMP файла
-    long size, h, w, i;
-    size = width*bpp/8;
-    long sizecheck = size;
-    short int emtybytes = 4;
-    short int ost = size % emtybytes;
-    uint8_t colour;
-    for (h=0; h<height; h++) //Непосредственно считывание кодировки цветов, алгоритм неверный, пока не переделывал.
-    {
-        for (w=0; w<width; w++)
-        {
-            if(sizecheck>ost)
-            { 
-                i = 0;
-                file << "(";
-                while (i < 3)
-                {
-                    pic.read(reinterpret_cast<char*>(&colour), sizeof(colour));
-                    file << hex << (long)colour; //hex << убрал для вывода десятичных формул.
-                    if (i < 2)
-                        file << ",";
-                    i += 1;
-                }
-              file << ") ";
-              sizecheck -= 3;
-            }
-            else
-            {
-                while (sizecheck >= 0) // Пропуск "дополненных" байтов
-                {
-                    pic.read(reinterpret_cast<char*>(&colour), sizeof(colour));
-                    sizecheck -= 1;
-                }
-            }
-        }
-        w = 0;
-        sizecheck = size;
+
+    if (!success) {
+        throw std::runtime_error("read failed");
     }
 }
-// Переименовать переменные, поправить типы, проверить. УБрать лишние буферы в считывании. Мусорные байты находтся вне длинны. 
+
+template <class T> 
+T read(std::ifstream& stream) {
+    T tmp;
+    readBytes(stream, reinterpret_cast<byte*>(&tmp), sizeof(T));
+    return tmp;
+}
+
+template <class T, size_t size>
+std::array<T, size> readArray(std::ifstream& stream) {
+    std::array<T, size> array;
+    byte* tmpAsBytes = reinterpret_cast<byte*>(array.data());
+    readBytes(stream, tmpAsBytes, sizeof(T) * size);
+    return array;
+}
+
+template <class T>
+T printNextField(std::ifstream& stream, std::ostream& output, const char* name) {
+    const auto val = read<T>(stream);
+    output << name << ": " << val << std::endl;
+    return val;
+}
+
+/**
+ * Ленюсь писать полный комментарий. Но очень желательно. Обрати внимание, возвращаемый тип описал,
+ * т.к. он вовсе неочевиден из названия
+ * \param input ...
+ * \param output ...
+ * \return смещение до начала пиксельных данных
+ */
+uint32_t dumpFileHeader(std::ifstream& input, std::ostream& output) {
+    const auto sign = readArray<uint8_t, 2>(input);
+    output << "Сигнатура: " << sign.front() << sign.back() << std::endl;
+
+    printNextField<uint32_t>(input, output, "Размер файла (байт)");
+
+    const auto reserved = readArray<uint16_t, 2>(input);
+    output << "Зарезервированные поля (ожидается 0): " << reserved.front() << " " << reserved.back() << std::endl;
+
+    return printNextField<uint32_t>(input, output, "Смещение (в байтах)");
+}
+
+struct Size {
+    int32_t width;
+    int32_t height;
+};
+// Как осуществляется проверка на тип структуры файла? СДЕЛАТЬ
+Size dumpBitmapInfo(std::ifstream& input, std::ostream& output) {
+    printNextField<uint32_t>(input, output, "Размер (в байтах) структуры");
+
+    //TODO: check core/3/4/5
+    const auto width = printNextField<int32_t>(input, output, "width");
+    const auto height = printNextField<int32_t>(input, output, "height");
+    printNextField<uint16_t>(input, output, "Проверка курсора (должно быть 1)");
+    printNextField<uint16_t>(input, output, "Число бит на пиксель");
+    printNextField<uint32_t>(input, output, "Способ хранения пикселей (должно быть 0)");
+    printNextField<uint32_t>(input, output, "Размер пиксельных данных (или 0), байт");
+    printNextField<int32_t>(input, output, "Кол-во пикселей на метр (x)");
+    printNextField<int32_t>(input, output, "Кол-во пикселей на метр (y)");
+    printNextField<uint32_t>(input, output, "Размер таблицы цветов");
+    printNextField<uint32_t>(input, output, "Количество ячеек от начала таблицы цветов до последней используемой");
+    return { width, height };
+} 
+
+void dumpAsText(std::ifstream& input, std::ostream& output) {
+    const uint32_t pixelsOffset = dumpFileHeader(input, output);
+    const Size size = dumpBitmapInfo(input, output); 
+    const size_t pixelsBytesPerLine = size.width * 3; 
+    const size_t paddingBytes = pixelsBytesPerLine % 4;
+    // полный размер строки в байтах = pixelsBytesPerLine + paddingBytes
+
+    input.seekg(pixelsOffset); 
+
+    for (size_t i = 0; i < size.height; ++i) {
+        for (size_t j = 0; j < size.width; ++j) {
+            output << "("
+                << (unsigned)read<uint8_t>(input) << ","
+                << (unsigned)read<uint8_t>(input) << ","
+                << (unsigned)read<uint8_t>(input) << ") ";
+        }
+
+        for (size_t pad = 0; pad != paddingBytes; ++pad) {
+            read<uint8_t>(input);
+        }
+        output << std::endl;
+    }
+}
+
+int main (int files, char* data[]) // Полный привет, переделать
+{
+    setlocale(LC_CTYPE, "Russian");
+   // std::string picture = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\lenna.bmp";
+    std::ifstream input;
+    input.open(data[1], input.binary | input.in);
+   // std::string numfile = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\test2.txt";
+    std::ofstream output;
+    output.open(data[2], output.out);
+
+    //dumpAsText(input, output);
+
+    bool ok = input.is_open();
+    dumpAsText(input, std::cout);
+}
+// Ввод путей в командной строке
