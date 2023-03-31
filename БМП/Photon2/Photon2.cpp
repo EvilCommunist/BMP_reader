@@ -66,9 +66,29 @@ struct Size {
 };
 // Как осуществляется проверка на тип структуры файла? СДЕЛАТЬ
 Size dumpBitmapInfo(std::ifstream& input, std::ostream& output) {
-    printNextField<uint32_t>(input, output, "Размер (в байтах) структуры");
+    uint32_t struck = printNextField<uint32_t>(input, output, "Размер (в байтах) структуры");
 
     //TODO: check core/3/4/5
+
+    switch (struck) // Примерная обработка ошибки структуры
+    {
+        case 12:
+            output << "Имя структуры: BITMAPCOREHEADER" << std::endl;
+            throw std::runtime_error("cannot read this type of BMP");
+            break;
+        case 40:
+            output << "Имя структуры: BITMAPINFOHEADER" << std::endl;
+            break;
+        case 108:
+            output << "Имя структуры: BITMAPV4HEADER" << std::endl;
+            throw std::runtime_error("cannot read this type of BMP");
+            break;
+        case 124:
+            output << "Имя структуры: BITMAPV5HEADER" << std::endl;
+            throw std::runtime_error("cannot read this type of BMP");
+            break;
+    }
+
     const auto width = printNextField<int32_t>(input, output, "width");
     const auto height = printNextField<int32_t>(input, output, "height");
     printNextField<uint16_t>(input, output, "Проверка курсора (должно быть 1)");
@@ -106,8 +126,10 @@ void dumpAsText(std::ifstream& input, std::ostream& output) {
     }
 }
 
-int main (int files, char* data[]) // Полный привет, переделать
+int main (int files, char* data[])
 {
+    if (files != 3)
+        throw std::runtime_error("input 2 paths next time");
     setlocale(LC_CTYPE, "Russian");
    // std::string picture = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\lenna.bmp";
     std::ifstream input;
@@ -121,4 +143,3 @@ int main (int files, char* data[]) // Полный привет, передел�
     bool ok = input.is_open();
     dumpAsText(input, std::cout);
 }
-// Ввод путей в командной строке
