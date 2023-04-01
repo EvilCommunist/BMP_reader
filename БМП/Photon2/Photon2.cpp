@@ -128,18 +128,25 @@ void dumpAsText(std::ifstream& input, std::ostream& output) {
 
 int main (int files, char* data[])
 {
-    if (files != 3)
-        throw std::runtime_error("input 2 paths next time");
+    if (files != 3) throw std::runtime_error("input 2 paths next time");
     setlocale(LC_CTYPE, "Russian");
-   // std::string picture = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\lenna.bmp";
+    //std::string picture = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\lenna.bmp";
     std::ifstream input;
+    std::string s1 = data[1];
     input.open(data[1], input.binary | input.in);
-   // std::string numfile = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\test2.txt";
+    // std::string numfile = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\younoturr.txt";
     std::ofstream output;
     output.open(data[2], output.out);
 
     //dumpAsText(input, output);
 
     bool ok = input.is_open();
-    dumpAsText(input, std::cout);
-}
+    if (ok==1)
+    {
+    dumpAsText(input, output);
+    }
+    else
+    {
+        std::cout << "Файл не открыт";
+    }
+ }
