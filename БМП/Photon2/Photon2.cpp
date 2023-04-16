@@ -4,6 +4,7 @@
 #include <iterator>
 #include <windows.h>
 #include <TCHAR.h>
+#include <vector>
 
 using byte = unsigned char;
 
@@ -41,13 +42,8 @@ T printNextField(std::ifstream& stream, std::ostream& output, const char* name) 
     return val;
 }
 
-/**
- * Ленюсь писать полный комментарий. Но очень желательно. Обрати внимание, возвращаемый тип описал,
- * т.к. он вовсе неочевиден из названия
- * \param input ...
- * \param output ...
- * \return смещение до начала пиксельных данных
- */
+ //return смещение до начала пиксельных данных
+ 
 uint32_t dumpFileHeader(std::ifstream& input, std::ostream& output) {
     const auto sign = readArray<uint8_t, 2>(input);
     output << "Сигнатура: " << sign.front() << sign.back() << std::endl;
@@ -64,11 +60,9 @@ struct Size {
     int32_t width;
     int32_t height;
 };
-// Как осуществляется проверка на тип структуры файла? СДЕЛАТЬ
+
 Size dumpBitmapInfo(std::ifstream& input, std::ostream& output) {
     uint32_t struck = printNextField<uint32_t>(input, output, "Размер (в байтах) структуры");
-
-    //TODO: check core/3/4/5
 
     switch (struck) // Примерная обработка ошибки структуры
     {
@@ -102,6 +96,55 @@ Size dumpBitmapInfo(std::ifstream& input, std::ostream& output) {
     return { width, height };
 } 
 
+class Pixel
+{
+private:
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+public:
+
+    void SetPixel(uint8_t &r, uint8_t &g, uint8_t &b)
+    {
+        red = r;
+        green = g;
+        blue = b;
+    }
+
+    int GetPixelRed()
+    {
+        return red;
+    }
+
+    int GetPixelGreen()
+    {
+        return green;
+    }
+
+    int GetPixelBlue()
+    {
+        return blue;
+    }
+};
+
+class Matrix {
+private:
+    
+    std::vector<Pixel> image;
+
+public:
+    
+    void SetCoordinateData(Pixel p)
+    {
+            image.push_back(p);
+    }
+    
+    Pixel GetCoordinateData(size_t& width,int& i, int& j)
+    {
+        return image[i* width +j];
+    }
+};
+
 void dumpAsText(std::ifstream& input, std::ostream& output) {
     const uint32_t pixelsOffset = dumpFileHeader(input, output);
     const Size size = dumpBitmapInfo(input, output); 
@@ -111,12 +154,18 @@ void dumpAsText(std::ifstream& input, std::ostream& output) {
 
     input.seekg(pixelsOffset); 
 
+    uint8_t r, g, b;
+
     for (size_t i = 0; i < size.height; ++i) {
         for (size_t j = 0; j < size.width; ++j) {
+            r = (unsigned)read<uint8_t>(input);
+            g = (unsigned)read<uint8_t>(input);
+            b = (unsigned)read<uint8_t>(input);
+            SetPixel(r, g, b); // Ошибка компиляции, не понятно что делать
             output << "("
-                << (unsigned)read<uint8_t>(input) << ","
-                << (unsigned)read<uint8_t>(input) << ","
-                << (unsigned)read<uint8_t>(input) << ") ";
+                << r << ","
+                << g << ","
+                << b << ") ";
         }
 
         for (size_t pad = 0; pad != paddingBytes; ++pad) {
@@ -141,7 +190,7 @@ int main (int files, char* data[])
     //dumpAsText(input, output);
 
     bool ok = input.is_open();
-    if (ok==1)
+    if (ok)
     {
     dumpAsText(input, output);
     }
