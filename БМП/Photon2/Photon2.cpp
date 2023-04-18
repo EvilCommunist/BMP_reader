@@ -156,16 +156,18 @@ void dumpAsText(std::ifstream& input, std::ostream& output) {
 
     uint8_t r, g, b;
 
+    Pixel pix;
+
+    Matrix mat;
+
     for (size_t i = 0; i < size.height; ++i) {
         for (size_t j = 0; j < size.width; ++j) {
             r = (unsigned)read<uint8_t>(input);
             g = (unsigned)read<uint8_t>(input);
             b = (unsigned)read<uint8_t>(input);
-            SetPixel(r, g, b); // Ошибка компиляции, не понятно что делать
-            output << "("
-                << r << ","
-                << g << ","
-                << b << ") ";
+            pix.SetPixel(r, g, b);
+            mat.SetCoordinateData(pix);
+            output << "(" << r << "," << g << "," << b << ") ";
         }
 
         for (size_t pad = 0; pad != paddingBytes; ++pad) {
