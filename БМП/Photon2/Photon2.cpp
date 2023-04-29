@@ -111,17 +111,17 @@ public:
         blue = b;
     }
 
-    int GetPixelRed()
+    int GetRed() const
     {
         return red;
     }
 
-    int GetPixelGreen()
+    int GetGreen() const
     {
         return green;
     }
 
-    int GetPixelBlue()
+    int GetBlue() const
     {
         return blue;
     }
@@ -132,16 +132,37 @@ private:
     
     std::vector<Pixel> image;
 
-public:
-    
-    void SetCoordinateData(Pixel p)
+    size_t width;
+
+    size_t height;
+
+    int GetCoord(int & i, int &j)
     {
-            image.push_back(p);
+        size_t coord = i * width + j;
+        return coord;
     }
-    
-    Pixel GetCoordinateData(size_t& width,int& i, int& j)
+
+public:
+
+    Matrix(size_t heightread, size_t widthread)
     {
-        return image[i* width +j];
+        width = widthread;
+        height = heightread;
+    }
+
+    Pixel GetCoordinateData(int& i, int& j)
+    {
+        return image[GetCoord(i, j)];
+    }
+
+    void SetPixel(int& i, int& j, Pixel& pix)
+    {
+        image[GetCoord(i, j)] = pix;
+    }
+
+    Pixel GetPixel(int& i, int& j)
+    {
+        return image[GetCoord(i, j)];
     }
 };
 
@@ -158,7 +179,7 @@ void dumpAsText(std::ifstream& input, std::ostream& output) {
 
     Pixel pix;
 
-    Matrix mat;
+    Matrix mat(size.width, size.height);
 
     for (size_t i = 0; i < size.height; ++i) {
         for (size_t j = 0; j < size.width; ++j) {
@@ -166,9 +187,9 @@ void dumpAsText(std::ifstream& input, std::ostream& output) {
             g = (unsigned)read<uint8_t>(input);
             b = (unsigned)read<uint8_t>(input);
             pix.SetPixel(r, g, b);
-            mat.SetCoordinateData(pix);
+           // mat.SetCoordinateData(pix);
             output << "(" << r << "," << g << "," << b << ") ";
-        }
+        } //Сначала заполнить матрицу, потом файл
 
         for (size_t pad = 0; pad != paddingBytes; ++pad) {
             read<uint8_t>(input);
