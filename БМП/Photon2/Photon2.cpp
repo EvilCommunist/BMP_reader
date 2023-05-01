@@ -110,21 +110,6 @@ public:
         green = g;
         blue = b;
     }
-
-    int GetRed() const
-    {
-        return red;
-    }
-
-    int GetGreen() const
-    {
-        return green;
-    }
-
-    int GetBlue() const
-    {
-        return blue;
-    }
 };
 
 class Matrix {
@@ -136,15 +121,36 @@ private:
 
     size_t height;
 
+    bool CoordIsValid(size_t &coord)
+    {
+        if ((coord < width*height)&&(coord>=0))
+        {
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
     int GetCoord(int & i, int &j)
     {
         size_t coord = i * width + j;
-        return coord;
+        if (CoordIsValid(coord))
+        {
+            return coord;
+        }
+        else
+        {
+            return 0;
+            system("pause");
+            std::cout << "Введите координату существующего пикселя";
+        }
     }
 
 public:
 
-    Matrix(size_t heightread, size_t widthread)
+    Matrix(size_t widthread, size_t heightread)
     {
         width = widthread;
         height = heightread;
