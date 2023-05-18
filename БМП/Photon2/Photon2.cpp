@@ -35,25 +35,25 @@ std::array<T, size> readArray(std::ifstream& stream) {
     return array;
 }
 
+
 template <class T>
-T printNextField(std::ifstream& stream, std::ostream& output, const char* name) {
+T takeNextField(std::ifstream& stream, const char* name) {
     const auto val = read<T>(stream);
-    output << name << ": " << val << std::endl;
     return val;
 }
 
  //return смещение до начала пиксельных данных
  
-uint32_t dumpFileHeader(std::ifstream& input, std::ostream& output) {
+uint32_t takeHeadInf(std::ifstream& input) {
     const auto sign = readArray<uint8_t, 2>(input);
-    output << "Сигнатура: " << sign.front() << sign.back() << std::endl;
+    std::cout << "Сигнатура: " << sign.front() << sign.back() << std::endl;
 
-    printNextField<uint32_t>(input, output, "Размер файла (байт)");
+    takeNextField<uint32_t>(input,"Размер файла (байт)");
 
     const auto reserved = readArray<uint16_t, 2>(input);
-    output << "Зарезервированные поля (ожидается 0): " << reserved.front() << " " << reserved.back() << std::endl;
+    std::cout << "Зарезервированные поля (ожидается 0): " << reserved.front() << " " << reserved.back() << std::endl;
 
-    return printNextField<uint32_t>(input, output, "Смещение (в байтах)");
+    return takeNextField<uint32_t>(input,"Смещение (в байтах)");
 }
 
 struct Size {
@@ -61,38 +61,30 @@ struct Size {
     int32_t height;
 };
 
-Size dumpBitmapInfo(std::ifstream& input, std::ostream& output) {
-    uint32_t struck = printNextField<uint32_t>(input, output, "Размер (в байтах) структуры");
+Size takeBitMapInfo(std::ifstream& input) {  // Берём из заголовочника только основную для работы с файлом информацию
+    uint32_t struck = takeNextField<uint32_t>(input,"Размер (в байтах) структуры");
+     
+    if ((struck!=12) && (struck != 40) && (struck != 108) && (struck != 124)) // Проверка на валидность типа БМП
+        throw std::runtime_error("unknown BMP type");
 
-    switch (struck) // Примерная обработка ошибки структуры
+     switch (struck)
     {
         case 12:
-            output << "Имя структуры: BITMAPCOREHEADER" << std::endl;
-            throw std::runtime_error("cannot read this type of BMP");
+            throw std::runtime_error("cannot read this type of BMP (BITMAPCOREHEADER)");
             break;
         case 40:
-            output << "Имя структуры: BITMAPINFOHEADER" << std::endl;
+            std::cout << "Имя структуры: BITMAPINFOHEADER, файл корректный" << std::endl;
             break;
         case 108:
-            output << "Имя структуры: BITMAPV4HEADER" << std::endl;
-            throw std::runtime_error("cannot read this type of BMP");
+            throw std::runtime_error("cannot read this type of BMP (BITMAPV4HEADER)");
             break;
         case 124:
-            output << "Имя структуры: BITMAPV5HEADER" << std::endl;
-            throw std::runtime_error("cannot read this type of BMP");
+            throw std::runtime_error("cannot read this type of BMP (BITMAPV5HEADER)");
             break;
     }
 
-    const auto width = printNextField<int32_t>(input, output, "width");
-    const auto height = printNextField<int32_t>(input, output, "height");
-    printNextField<uint16_t>(input, output, "Проверка курсора (должно быть 1)");
-    printNextField<uint16_t>(input, output, "Число бит на пиксель");
-    printNextField<uint32_t>(input, output, "Способ хранения пикселей (должно быть 0)");
-    printNextField<uint32_t>(input, output, "Размер пиксельных данных (или 0), байт");
-    printNextField<int32_t>(input, output, "Кол-во пикселей на метр (x)");
-    printNextField<int32_t>(input, output, "Кол-во пикселей на метр (y)");
-    printNextField<uint32_t>(input, output, "Размер таблицы цветов");
-    printNextField<uint32_t>(input, output, "Количество ячеек от начала таблицы цветов до последней используемой");
+    const auto width = takeNextField<int32_t>(input,"width");
+    const auto height = takeNextField<int32_t>(input,"height");
     return { width, height };
 } 
 
@@ -104,11 +96,16 @@ private:
     uint8_t blue;
 public:
 
-    void SetPixel(uint8_t &r, uint8_t &g, uint8_t &b)
+    void SetPixel(uint8_t r, uint8_t g, uint8_t b)
     {
         red = r;
         green = g;
         blue = b;
+    }
+
+    void PrintPixel(std::ostream& out)
+    {
+        out << "(" << red << "," << green << "," << blue << ")" << " ";
     }
 };
 
@@ -121,30 +118,20 @@ private:
 
     size_t height;
 
-    bool CoordIsValid(size_t &coord)
+    bool CoordIsValid(unsigned int i, unsigned int j) const 
     {
-        if ((coord < width*height)&&(coord>=0))
-        {
-            return 1;
-        }
-        else
-        {
-            return 0;
-        }
+        return ((i < height) && (j < width));
     }
 
-    int GetCoord(int & i, int &j)
+    int GetCoord(int i, int j) const
     {
-        size_t coord = i * width + j;
-        if (CoordIsValid(coord))
+        if (CoordIsValid(i, j))
         {
-            return coord;
+            return i * width + j;
         }
         else
         {
-            return 0;
-            system("pause");
-            std::cout << "Введите координату существующего пикселя";
+            return width*height;
         }
     }
 
@@ -154,32 +141,48 @@ public:
     {
         width = widthread;
         height = heightread;
+        image.resize(width*height);
     }
 
-    Pixel GetCoordinateData(int& i, int& j)
-    {
-        return image[GetCoord(i, j)];
-    }
-
-    void SetPixel(int& i, int& j, Pixel& pix)
+    void SetPixel(unsigned int i, unsigned int j, Pixel pix)
     {
         image[GetCoord(i, j)] = pix;
     }
 
-    Pixel GetPixel(int& i, int& j)
+    Pixel GetPixel(unsigned int i, unsigned int j) const
     {
         return image[GetCoord(i, j)];
     }
+
+    size_t GetMatHeight()
+    {
+        return height;
+    }
+
+    size_t GetMatWidth()
+    {
+        return width;
+    }
 };
 
-void dumpAsText(std::ifstream& input, std::ostream& output) {
-    const uint32_t pixelsOffset = dumpFileHeader(input, output);
-    const Size size = dumpBitmapInfo(input, output); 
-    const size_t pixelsBytesPerLine = size.width * 3; 
-    const size_t paddingBytes = pixelsBytesPerLine % 4;
-    // полный размер строки в байтах = pixelsBytesPerLine + paddingBytes
+Matrix openAndFillImage(const std::string& filepath) // Считывание цветов в матрицу
+{
+    std::ifstream input;
+    std::string s1 = filepath;
+    input.open(filepath, input.binary | input.in);
+   
+    if (!input.is_open()) { // Проверка на открытие файла
+        Matrix nullmat(0, 0);
+        std::cout << "Файл не открыт";
+        return nullmat;
+    }
 
-    input.seekg(pixelsOffset); 
+    const uint32_t pixelsOffset = takeHeadInf(input);
+    const Size size = takeBitMapInfo(input);
+    const size_t pixelsBytesPerLine = size.width * 3;
+    const size_t paddingBytes = pixelsBytesPerLine % 4;
+
+    input.seekg(pixelsOffset);
 
     uint8_t r, g, b;
 
@@ -193,38 +196,33 @@ void dumpAsText(std::ifstream& input, std::ostream& output) {
             g = (unsigned)read<uint8_t>(input);
             b = (unsigned)read<uint8_t>(input);
             pix.SetPixel(r, g, b);
-           // mat.SetCoordinateData(pix);
-            output << "(" << r << "," << g << "," << b << ") ";
-        } //Сначала заполнить матрицу, потом файл
-
+            mat.SetPixel(i, j, pix);
+        }
         for (size_t pad = 0; pad != paddingBytes; ++pad) {
             read<uint8_t>(input);
         }
-        output << std::endl;
+    }  return mat;
+}
+
+void printMatrix(const Matrix& matrix, std::ostream& out) // Вывод матрицы
+{
+    Matrix mat = matrix;
+    for (size_t i = 0; i < mat.GetMatHeight(); ++i) {
+        for (size_t j = 0; j < mat.GetMatWidth(); ++j) {
+            mat.GetPixel(i, j).PrintPixel(out);
+        }
+        out << std::endl;
     }
 }
 
 int main (int files, char* data[])
 {
-    if (files != 3) throw std::runtime_error("input 2 paths next time");
+   // if (files != 3) throw std::runtime_error("input 2 paths next time");
     setlocale(LC_CTYPE, "Russian");
     //std::string picture = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\lenna.bmp";
-    std::ifstream input;
-    std::string s1 = data[1];
-    input.open(data[1], input.binary | input.in);
-    // std::string numfile = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\younoturr.txt";
+    //std::string numfile = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\younoturrr.txt";
     std::ofstream output;
     output.open(data[2], output.out);
 
-    //dumpAsText(input, output);
-
-    bool ok = input.is_open();
-    if (ok)
-    {
-    dumpAsText(input, output);
-    }
-    else
-    {
-        std::cout << "Файл не открыт";
-    }
+    printMatrix(openAndFillImage(data[1]), output);
  }
