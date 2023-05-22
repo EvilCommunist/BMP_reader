@@ -104,6 +104,21 @@ public:
         blue = b;
     }
 
+    uint8_t GetRed()
+    {
+        return red;
+    }
+
+    uint8_t GetGreen()
+    {
+        return green;
+    }
+
+    uint8_t GetBlue()
+    {
+        return blue;
+    }
+
     void PrintPixel(std::ostream& out)
     {
         out << "(" << (unsigned)red << "," << (unsigned)green << "," << (unsigned)blue << ")" << " ";
@@ -165,36 +180,13 @@ public:
         return width;
     }
 };
-//////////////////////////////////////////////////////////////////////////
-Matrix addFilters(std::vector<std::string> arg1, Matrix matr)
-{
-    std::vector<std::string> arg = arg1;
-    Matrix matrix = matr;
-    for (int i = 0; i < arg.size(); i++)
-    std::cout << arg[i] << "   ";
-    std:: cout << initializeargument(arg[0]);
-   /* for (size_t i = 0; i<arg.size(); i++)
-    {
-        if (arg[i][0]=='-') // InitializeToken
-        {
-            char c = initializeargument(arg[i]);
-            switch (c)
-            {
-            case 'c': filterCrop(matrix, stod(arg[i + 1]), stod(arg[i + 2])); i += 2; break;
-            case 'g': break;
-            }
-        }
-    }
-    Matrix matrya = matrix;*/
-    return matrix;
-}
 
 char initializeargument(std::string arg)
 {
     // В виду наличия аргументов с разными первыми буквами ограничимся выводом первой буквы аргумента
     return arg[1];
 }
-/*
+
 Matrix filterCrop(Matrix mat, size_t newwidth, size_t newheight)
 {
     Matrix newmat(newwidth, newheight);
@@ -204,8 +196,40 @@ Matrix filterCrop(Matrix mat, size_t newwidth, size_t newheight)
         }
     }
     return newmat;
-}*/
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+}
+
+Matrix filterGs(Matrix mat)
+{
+    Matrix newmat = mat;
+    for (size_t i = 0; i < mat.GetMatHeight(); ++i) {
+        for (size_t j = 0; j < mat.GetMatWidth(); ++j) {
+            Pixel pix;
+            pix.SetPixel(mat.GetPixel(i, j).GetRed() * 0.299, mat.GetPixel(i, j).GetGreen() * 0.587, mat.GetPixel(i, j).GetBlue() * 0.114);
+            newmat.SetPixel(i, j, pix);
+        }
+    }
+    return newmat;
+}
+
+Matrix addFilters(std::vector<std::string> arg1, Matrix matr)
+{
+    std::vector<std::string> arg = arg1;
+    Matrix matrix = matr;
+    for (size_t i = 0; i<arg.size(); i++)
+    {
+        if (arg[i][0]=='-') // InitializeToken
+        {
+            char c = initializeargument(arg[i]);
+            switch (c)
+            {
+            case 'c': matrix = filterCrop(matrix, stod(arg[i + 1]), stod(arg[i + 2])); i += 2; break;
+            case 'g': matrix = filterGs(matrix); break;
+            }
+        }
+    }
+    return matrix;
+}
+
 Matrix openAndFillImage(const std::string& filepath, std::vector<std::string> arg) // Считывание цветов в матрицу
 {
     std::ifstream input;
@@ -243,10 +267,8 @@ Matrix openAndFillImage(const std::string& filepath, std::vector<std::string> ar
             read<uint8_t>(input);
         }
     } 
- 
-    addFilters(arg, mat);
 
-    return mat;
+    return addFilters(arg, mat);
 }
 
 void printMatrix(const Matrix& matrix, std::ostream& out) // Вывод матрицы
