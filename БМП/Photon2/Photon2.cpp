@@ -1,4 +1,5 @@
 ﻿#include <iostream>
+#include <string>
 #include <fstream>
 #include <array>
 #include <iterator>
@@ -61,7 +62,7 @@ struct Size {
     int32_t height;
 };
 
-Size takeBitMapInfo(std::ifstream& input) {  // Берём из заголовочника только основную для работы с файлом информацию
+Size takeBitMapInfo(std::ifstream& input) { 
     uint32_t struck = takeNextField<uint32_t>(input,"Размер (в байтах) структуры");
      
     if ((struck!=12) && (struck != 40) && (struck != 108) && (struck != 124)) // Проверка на валидность типа БМП
@@ -105,7 +106,7 @@ public:
 
     void PrintPixel(std::ostream& out)
     {
-        out << "(" << red << "," << green << "," << blue << ")" << " ";
+        out << "(" << (unsigned)red << "," << (unsigned)green << "," << (unsigned)blue << ")" << " ";
     }
 };
 
@@ -164,8 +165,48 @@ public:
         return width;
     }
 };
+//////////////////////////////////////////////////////////////////////////
+Matrix addFilters(std::vector<std::string> arg1, Matrix matr)
+{
+    std::vector<std::string> arg = arg1;
+    Matrix matrix = matr;
+    for (int i = 0; i < arg.size(); i++)
+    std::cout << arg[i] << "   ";
+    std:: cout << initializeargument(arg[0]);
+   /* for (size_t i = 0; i<arg.size(); i++)
+    {
+        if (arg[i][0]=='-') // InitializeToken
+        {
+            char c = initializeargument(arg[i]);
+            switch (c)
+            {
+            case 'c': filterCrop(matrix, stod(arg[i + 1]), stod(arg[i + 2])); i += 2; break;
+            case 'g': break;
+            }
+        }
+    }
+    Matrix matrya = matrix;*/
+    return matrix;
+}
 
-Matrix openAndFillImage(const std::string& filepath) // Считывание цветов в матрицу
+char initializeargument(std::string arg)
+{
+    // В виду наличия аргументов с разными первыми буквами ограничимся выводом первой буквы аргумента
+    return arg[1];
+}
+/*
+Matrix filterCrop(Matrix mat, size_t newwidth, size_t newheight)
+{
+    Matrix newmat(newwidth, newheight);
+    for (size_t i = 0; i < mat.GetMatHeight(); ++i) {
+        for (size_t j = 0; j < mat.GetMatWidth(); ++j) {
+            newmat.SetPixel(i, j, mat.GetPixel(i, j));
+        }
+    }
+    return newmat;
+}*/
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Matrix openAndFillImage(const std::string& filepath, std::vector<std::string> arg) // Считывание цветов в матрицу
 {
     std::ifstream input;
     std::string s1 = filepath;
@@ -192,21 +233,26 @@ Matrix openAndFillImage(const std::string& filepath) // Считывание ц�
 
     for (size_t i = 0; i < size.height; ++i) {
         for (size_t j = 0; j < size.width; ++j) {
-            r = (unsigned)read<uint8_t>(input);
-            g = (unsigned)read<uint8_t>(input);
             b = (unsigned)read<uint8_t>(input);
+            g = (unsigned)read<uint8_t>(input);
+            r = (unsigned)read<uint8_t>(input);
             pix.SetPixel(r, g, b);
             mat.SetPixel(i, j, pix);
         }
         for (size_t pad = 0; pad != paddingBytes; ++pad) {
             read<uint8_t>(input);
         }
-    }  return mat;
+    } 
+ 
+    addFilters(arg, mat);
+
+    return mat;
 }
 
 void printMatrix(const Matrix& matrix, std::ostream& out) // Вывод матрицы
 {
     Matrix mat = matrix;
+
     for (size_t i = 0; i < mat.GetMatHeight(); ++i) {
         for (size_t j = 0; j < mat.GetMatWidth(); ++j) {
             mat.GetPixel(i, j).PrintPixel(out);
@@ -217,12 +263,17 @@ void printMatrix(const Matrix& matrix, std::ostream& out) // Вывод матр
 
 int main (int files, char* data[])
 {
-   // if (files != 3) throw std::runtime_error("input 2 paths next time");
+    if (files < 3) throw std::runtime_error("input 2 paths next time");
     setlocale(LC_CTYPE, "Russian");
-    //std::string picture = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\lenna.bmp";
-    //std::string numfile = "C:\\Users\\AT241\\OneDrive\\Рабочий стол\\Pazhiloy\\younoturrr.txt";
+    std::vector<std::string> arg;
+
+    for (size_t i = 3; i<files; i++) // Создаём вектор аргмуентов
+    {
+        arg.push_back(data[i]);
+    }
+
     std::ofstream output;
     output.open(data[2], output.out);
 
-    printMatrix(openAndFillImage(data[1]), output);
+    printMatrix(openAndFillImage(data[1], arg), output);
  }
