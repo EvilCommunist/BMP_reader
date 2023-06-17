@@ -1,4 +1,5 @@
-﻿#include <iostream>
+﻿#pragma once
+#include <iostream>
 #include <string>
 #include <fstream>
 #include <array>
@@ -6,6 +7,11 @@
 #include <windows.h>
 #include <TCHAR.h>
 #include <vector>
+#include "HeaderStruct.h"
+#include "HeaderPixel.h"
+#include "SourcePixel.cpp"
+#include "HeaderMatrix.h"
+#include "SourceMatrix.cpp"
 
 using byte = unsigned char;
 
@@ -28,43 +34,44 @@ T read(std::ifstream& stream) {
     return tmp;
 }
 
-template <class T, size_t size>
-std::array<T, size> readArray(std::ifstream& stream) {
-    std::array<T, size> array;
+template <class T, size_t head>
+std::array<T, head> readArray(std::ifstream& stream) {
+    std::array<T, head> array;
     byte* tmpAsBytes = reinterpret_cast<byte*>(array.data());
-    readBytes(stream, tmpAsBytes, sizeof(T) * size);
+    readBytes(stream, tmpAsBytes, sizeof(T) * head);
     return array;
 }
 
 
 template <class T>
-T takeNextField(std::ifstream& stream, const char* name) {
+T takeNextField(std::ifstream& stream) {
     const auto val = read<T>(stream);
     return val;
 }
 
  //return смещение до начала пиксельных данных
  
-uint32_t takeHeadInf(std::ifstream& input) {
+HeaderReader takeHeadInf(std::ifstream& input) { // Попробовать изменить возвращаемое значение структурой хедера?
     const auto sign = readArray<uint8_t, 2>(input);
-    std::cout << "Сигнатура: " << sign.front() << sign.back() << std::endl;
+    HeaderReader h;
 
-    takeNextField<uint32_t>(input,"Размер файла (байт)");
+    h.sign1 = sign.front();
+    h.sign2= sign.back();
+
+    h.fileSize = takeNextField<uint32_t>(input);
 
     const auto reserved = readArray<uint16_t, 2>(input);
-    std::cout << "Зарезервированные поля (ожидается 0): " << reserved.front() << " " << reserved.back() << std::endl;
+    h.reserve1 = reserved.front();
+    h.reserve2 = reserved.back();
 
-    return takeNextField<uint32_t>(input,"Смещение (в байтах)");
+    h.paddToData = takeNextField<uint32_t>(input);
+
+    return h;
 }
 
-struct Size {
-    int32_t width;
-    int32_t height;
-};
+HeaderReader takeBitMapInfo(std::ifstream& input, HeaderReader h) { // Мои полномочия всё. Попробовать дважды перековырять файл???
+    uint32_t struck = takeNextField<uint32_t>(input);
 
-Size takeBitMapInfo(std::ifstream& input) { 
-    uint32_t struck = takeNextField<uint32_t>(input,"Размер (в байтах) структуры");
-     
     if ((struck!=12) && (struck != 40) && (struck != 108) && (struck != 124)) // Проверка на валидность типа БМП
         throw std::runtime_error("unknown BMP type");
 
@@ -75,6 +82,7 @@ Size takeBitMapInfo(std::ifstream& input) {
             break;
         case 40:
             std::cout << "Имя структуры: BITMAPINFOHEADER, файл корректный" << std::endl;
+            h.bmpType = struck;
             break;
         case 108:
             throw std::runtime_error("cannot read this type of BMP (BITMAPV4HEADER)");
@@ -84,102 +92,19 @@ Size takeBitMapInfo(std::ifstream& input) {
             break;
     }
 
-    const auto width = takeNextField<int32_t>(input,"width");
-    const auto height = takeNextField<int32_t>(input,"height");
-    return { width, height };
+     h.width = takeNextField<int32_t>(input);
+     h.height = takeNextField<int32_t>(input);
+     h.cursor= takeNextField<uint16_t>(input);
+     h.bpp = takeNextField<uint16_t>(input);
+     h.contain = takeNextField<uint32_t>(input);
+     h.pixDataSize = takeNextField<uint32_t>(input);
+     h.ppmX = takeNextField<int32_t>(input);
+     h.ppmY = takeNextField<int32_t>(input);
+     h.colorDataSize = takeNextField<uint32_t>(input);
+     h.cellsNum = takeNextField<uint32_t>(input);
+     
+    return h;
 } 
-
-class Pixel
-{
-private:
-    uint8_t red;
-    uint8_t green;
-    uint8_t blue;
-public:
-
-    void SetPixel(uint8_t r, uint8_t g, uint8_t b)
-    {
-        red = r;
-        green = g;
-        blue = b;
-    }
-
-    uint8_t GetRed()
-    {
-        return red;
-    }
-
-    uint8_t GetGreen()
-    {
-        return green;
-    }
-
-    uint8_t GetBlue()
-    {
-        return blue;
-    }
-
-    void PrintPixel(std::ostream& out)
-    {
-        out << "(" << (unsigned)red << "," << (unsigned)green << "," << (unsigned)blue << ")" << " ";
-    }
-};
-
-class Matrix {
-private:
-    
-    std::vector<Pixel> image;
-
-    size_t width;
-
-    size_t height;
-
-    bool CoordIsValid(unsigned int i, unsigned int j) const 
-    {
-        return ((i < height) && (j < width));
-    }
-
-    int GetCoord(int i, int j) const
-    {
-        if (CoordIsValid(i, j))
-        {
-            return i * width + j;
-        }
-        else
-        {
-            return width*height;
-        }
-    }
-
-public:
-
-    Matrix(size_t widthread, size_t heightread)
-    {
-        width = widthread;
-        height = heightread;
-        image.resize(width*height);
-    }
-
-    void SetPixel(unsigned int i, unsigned int j, Pixel pix)
-    {
-        image[GetCoord(i, j)] = pix;
-    }
-
-    Pixel GetPixel(unsigned int i, unsigned int j) const
-    {
-        return image[GetCoord(i, j)];
-    }
-
-    size_t GetMatHeight()
-    {
-        return height;
-    }
-
-    size_t GetMatWidth()
-    {
-        return width;
-    }
-};
 
 char initializeargument(std::string arg)
 {
@@ -190,8 +115,8 @@ char initializeargument(std::string arg)
 Matrix filterCrop(Matrix mat, size_t newwidth, size_t newheight)
 {
     Matrix newmat(newwidth, newheight);
-    for (size_t i = 0; i < mat.GetMatHeight(); ++i) {
-        for (size_t j = 0; j < mat.GetMatWidth(); ++j) {
+    for (size_t i = 0; i < newmat.GetMatHeight(); ++i) {
+        for (size_t j = 0; j < newmat.GetMatWidth(); ++j) {
             newmat.SetPixel(i, j, mat.GetPixel(i, j));
         }
     }
@@ -211,7 +136,7 @@ Matrix filterGs(Matrix mat)
     return newmat;
 }
 
-Matrix addFilters(std::vector<std::string> arg1, Matrix matr)
+Matrix addFilters(std::vector<std::string> arg1, Matrix matr, HeaderReader h) // Здесь надо вывести итоговый заголовочник к новый файл (вероятно, не уверен...)
 {
     std::vector<std::string> arg = arg1;
     Matrix matrix = matr;
@@ -242,21 +167,24 @@ Matrix openAndFillImage(const std::string& filepath, std::vector<std::string> ar
         return nullmat;
     }
 
-    const uint32_t pixelsOffset = takeHeadInf(input);
-    const Size size = takeBitMapInfo(input);
-    const size_t pixelsBytesPerLine = size.width * 3;
+    HeaderReader head; // С этого момента начинается колдовство
+
+    head = takeHeadInf(input);
+
+    const uint32_t pixelsOffset = head.paddToData;
+    head = takeBitMapInfo(input, head);
+    const size_t pixelsBytesPerLine = head.width * 3;
     const size_t paddingBytes = pixelsBytesPerLine % 4;
 
     input.seekg(pixelsOffset);
 
     uint8_t r, g, b;
-
     Pixel pix;
 
-    Matrix mat(size.width, size.height);
+    Matrix mat(head.width, head.height);
 
-    for (size_t i = 0; i < size.height; ++i) {
-        for (size_t j = 0; j < size.width; ++j) {
+    for (size_t i = 0; i < head.height; ++i) {
+        for (size_t j = 0; j < head.width; ++j) {
             b = (unsigned)read<uint8_t>(input);
             g = (unsigned)read<uint8_t>(input);
             r = (unsigned)read<uint8_t>(input);
@@ -268,7 +196,7 @@ Matrix openAndFillImage(const std::string& filepath, std::vector<std::string> ar
         }
     } 
 
-    return addFilters(arg, mat);
+    return addFilters(arg, mat, head);
 }
 
 void printMatrix(const Matrix& matrix, std::ostream& out) // Вывод матрицы
