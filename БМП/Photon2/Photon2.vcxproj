@@ -128,10 +128,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Photon2.cpp" />
+    <ClCompile Include="SourceBMPdata.cpp" />
     <ClCompile Include="SourceMatrix.cpp" />
     <ClCompile Include="SourcePixel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="HeaderBMPdata.h" />
     <ClInclude Include="HeaderMatrix.h" />
     <ClInclude Include="HeaderPixel.h" />
     <ClInclude Include="HeaderStruct.h" />

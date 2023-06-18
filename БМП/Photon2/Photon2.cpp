@@ -12,6 +12,8 @@
 #include "SourcePixel.cpp"
 #include "HeaderMatrix.h"
 #include "SourceMatrix.cpp"
+#include "HeaderBMPdata.h"
+#include "SourceBMPdata.cpp"
 
 using byte = unsigned char;
 
@@ -136,7 +138,7 @@ Matrix filterGs(Matrix mat)
     return newmat;
 }
 
-Matrix addFilters(std::vector<std::string> arg1, Matrix matr, HeaderReader h) // Здесь надо вывести итоговый заголовочник к новый файл (вероятно, не уверен...)
+Matrix addFilters(std::vector<std::string> arg1, Matrix matr, HeaderReader h) // Поменять возвращаемый тип
 {
     std::vector<std::string> arg = arg1;
     Matrix matrix = matr;
@@ -152,6 +154,7 @@ Matrix addFilters(std::vector<std::string> arg1, Matrix matr, HeaderReader h) //
             }
         }
     }
+
     return matrix;
 }
 

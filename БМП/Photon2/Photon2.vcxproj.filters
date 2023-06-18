@@ -24,6 +24,9 @@
     <ClCompile Include="SourceMatrix.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="SourceBMPdata.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="HeaderStruct.h">
@@ -33,6 +36,9 @@
       <Filter>Исходные файлы</Filter>
     </ClInclude>
     <ClInclude Include="HeaderMatrix.h">
+      <Filter>Исходные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="HeaderBMPdata.h">
       <Filter>Исходные файлы</Filter>
     </ClInclude>
   </ItemGroup>
