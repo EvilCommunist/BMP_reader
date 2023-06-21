@@ -21,6 +21,7 @@ public:
     uint8_t GetGreen();
     uint8_t GetBlue();
 
+    void PrintPixel();
     void PrintPixel(std::ostream& out);
     void PixelToImage(std::ostream& out);
 };

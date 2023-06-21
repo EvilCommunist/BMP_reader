@@ -7,13 +7,10 @@
 #include <windows.h>
 #include <TCHAR.h>
 #include <vector>
-#include "HeaderStruct.h"
-#include "HeaderPixel.h"
-#include "SourcePixel.cpp"
-#include "HeaderMatrix.h"
-#include "SourceMatrix.cpp"
-#include "HeaderBMPdata.h"
-#include "SourceBMPdata.cpp"
+#include "Struct.h"
+#include "Pixel.h"
+#include "Matrix.h"
+#include "BMPdata.h"
 
 using byte = unsigned char;
 
@@ -53,7 +50,7 @@ T takeNextField(std::ifstream& stream) {
 
  //return смещение до начала пиксельных данных
  
-HeaderReader takeHeadInf(std::ifstream& input) { // Попробовать изменить возвращаемое значение структурой хедера?
+HeaderReader takeHeadInf(std::ifstream& input) { 
     const auto sign = readArray<uint8_t, 2>(input);
     HeaderReader h;
 
@@ -71,7 +68,7 @@ HeaderReader takeHeadInf(std::ifstream& input) { // Попробовать из�
     return h;
 }
 
-HeaderReader takeBitMapInfo(std::ifstream& input, HeaderReader h) { // Мои полномочия всё. Попробовать дважды перековырять файл???
+HeaderReader takeBitMapInfo(std::ifstream& input, HeaderReader h) { 
     uint32_t struck = takeNextField<uint32_t>(input);
 
     if ((struck!=12) && (struck != 40) && (struck != 108) && (struck != 124)) // Проверка на валидность типа БМП
@@ -114,19 +111,30 @@ char initializeargument(std::string arg)
     return arg[1];
 }
 
-Matrix filterCrop(Matrix mat, size_t newwidth, size_t newheight)
+BMPdata filterCrop(Matrix mat, size_t newwidth, size_t newheight, HeaderReader h)
 {
+    h.width = newwidth;
+    h.height = newheight;
+    h.pixDataSize = newwidth * newheight * h.bpp;
+    h.fileSize = h.pixDataSize + h.paddToData;
+
+    BMPdata newpic;
+    newpic.setHeader(h);
     Matrix newmat(newwidth, newheight);
     for (size_t i = 0; i < newmat.GetMatHeight(); ++i) {
         for (size_t j = 0; j < newmat.GetMatWidth(); ++j) {
             newmat.SetPixel(i, j, mat.GetPixel(i, j));
         }
     }
-    return newmat;
+    newpic.setColorMatrix(newmat); 
+    
+    return newpic;
 }
 
-Matrix filterGs(Matrix mat)
+BMPdata filterGs(Matrix mat, HeaderReader h)
 {
+    BMPdata newpic;
+    newpic.setHeader(h);
     Matrix newmat = mat;
     for (size_t i = 0; i < mat.GetMatHeight(); ++i) {
         for (size_t j = 0; j < mat.GetMatWidth(); ++j) {
@@ -135,13 +143,15 @@ Matrix filterGs(Matrix mat)
             newmat.SetPixel(i, j, pix);
         }
     }
-    return newmat;
+    newpic.setColorMatrix(newmat);
+    return newpic;
 }
 
-Matrix addFilters(std::vector<std::string> arg1, Matrix matr, HeaderReader h) // Поменять возвращаемый тип
+BMPdata addFilters(std::vector<std::string> arg1, Matrix matr, HeaderReader h) 
 {
     std::vector<std::string> arg = arg1;
     Matrix matrix = matr;
+    BMPdata newpic;
     for (size_t i = 0; i<arg.size(); i++)
     {
         if (arg[i][0]=='-') // InitializeToken
@@ -149,28 +159,29 @@ Matrix addFilters(std::vector<std::string> arg1, Matrix matr, HeaderReader h) //
             char c = initializeargument(arg[i]);
             switch (c)
             {
-            case 'c': matrix = filterCrop(matrix, stod(arg[i + 1]), stod(arg[i + 2])); i += 2; break;
-            case 'g': matrix = filterGs(matrix); break;
+            case 'c': newpic = filterCrop(matrix, stod(arg[i + 1]), stod(arg[i + 2]), h); i += 2; break;
+            case 'g': newpic = filterGs(matrix, h); break;
             }
         }
     }
 
-    return matrix;
+    return newpic;
 }
 
-Matrix openAndFillImage(const std::string& filepath, std::vector<std::string> arg) // Считывание цветов в матрицу
+BMPdata openAndFillImage(const std::string& filepath, std::vector<std::string> arg) // Считывание цветов в матрицу
 {
     std::ifstream input;
     std::string s1 = filepath;
     input.open(filepath, input.binary | input.in);
    
     if (!input.is_open()) { // Проверка на открытие файла
-        Matrix nullmat(0, 0);
+        /*Matrix nullmat(0, 0);
         std::cout << "Файл не открыт";
-        return nullmat;
+        return nullmat;*/
+        throw std::runtime_error("Файл не открыт, попробуйте снова");
     }
 
-    HeaderReader head; // С этого момента начинается колдовство
+    HeaderReader head;
 
     head = takeHeadInf(input);
 
@@ -202,16 +213,17 @@ Matrix openAndFillImage(const std::string& filepath, std::vector<std::string> ar
     return addFilters(arg, mat, head);
 }
 
-void printMatrix(const Matrix& matrix, std::ostream& out) // Вывод матрицы
+void printMatrix(BMPdata pic, std::ostream& out) // Вывод матрицы
 {
-    Matrix mat = matrix;
+    /*Matrix mat = matrix;
 
     for (size_t i = 0; i < mat.GetMatHeight(); ++i) {
         for (size_t j = 0; j < mat.GetMatWidth(); ++j) {
             mat.GetPixel(i, j).PrintPixel(out);
         }
         out << std::endl;
-    }
+    }*/
+    pic.fillBMP(out);
 }
 
 int main (int files, char* data[])

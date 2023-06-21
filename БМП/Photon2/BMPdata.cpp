@@ -7,12 +7,10 @@
 #include <windows.h>
 #include <TCHAR.h>
 #include <vector>
-#include "HeaderStruct.h"
-#include "HeaderPixel.h"
-#include "SourcePixel.cpp"
-#include "HeaderMatrix.h"
-#include "SourceMatrix.cpp"
-#include "HeaderBMPdata.h"
+#include "Struct.h"
+#include "Pixel.h"
+#include "Matrix.h"
+#include "BMPdata.h"
 
 void BMPdata::setHeader(HeaderReader h)
 {
@@ -20,7 +18,13 @@ void BMPdata::setHeader(HeaderReader h)
 }
 void BMPdata::setColorMatrix(Matrix mat)
 {
+	colours.setMatrix(mat);
 	colours = mat;
+}
+
+Matrix BMPdata::getMatrix()
+{
+	return colours;
 }
 
 void BMPdata::fillBMP(std::ostream& out)

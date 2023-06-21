@@ -128,15 +128,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Photon2.cpp" />
-    <ClCompile Include="SourceBMPdata.cpp" />
-    <ClCompile Include="SourceMatrix.cpp" />
-    <ClCompile Include="SourcePixel.cpp" />
+    <ClCompile Include="BMPdata.cpp" />
+    <ClCompile Include="Matrix.cpp" />
+    <ClCompile Include="Pixel.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="HeaderBMPdata.h" />
-    <ClInclude Include="HeaderMatrix.h" />
-    <ClInclude Include="HeaderPixel.h" />
-    <ClInclude Include="HeaderStruct.h" />
+    <ClInclude Include="BMPdata.h" />
+    <ClInclude Include="Matrix.h" />
+    <ClInclude Include="Pixel.h" />
+    <ClInclude Include="Struct.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

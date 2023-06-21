@@ -7,9 +7,8 @@
 #include <windows.h>
 #include <TCHAR.h>
 #include <vector>
-#include "HeaderPixel.h"
-#include "SourcePixel.cpp"
-#include "HeaderMatrix.h"
+#include "Pixel.h"
+#include "Matrix.h"
 
 bool Matrix::CoordIsValid(unsigned int i, unsigned int j) const
 {
@@ -32,6 +31,12 @@ Matrix::Matrix(size_t widthread, size_t heightread)
     width = widthread;
     height = heightread;
     image.resize(width * height);
+}
+void Matrix::setMatrix(Matrix mat)
+{
+    image.resize(mat.GetMatWidth()* mat.GetMatHeight());
+    width = mat.GetMatWidth();
+    height = mat.GetMatHeight();
 }
 
 void Matrix::SetPixel(unsigned int i, unsigned int j, Pixel pix)

@@ -7,11 +7,9 @@
 #include <windows.h>
 #include <TCHAR.h>
 #include <vector>
-#include "HeaderStruct.h"
-#include "HeaderPixel.h"
-#include "SourcePixel.cpp"
-#include "HeaderMatrix.h"
-#include "SourceMatrix.cpp"
+#include "Struct.h"
+#include "Pixel.h"
+#include "Matrix.h"
 
 class BMPdata
 {
@@ -19,8 +17,12 @@ private:
 	HeaderReader bmpHead;
 	Matrix colours;
 public:
+	BMPdata() {
+	}
 	void setHeader(HeaderReader h);
 	void setColorMatrix(Matrix mat);
+
+	Matrix getMatrix();
 
 	void fillBMP(std::ostream& out);
 };

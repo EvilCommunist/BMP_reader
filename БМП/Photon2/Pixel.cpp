@@ -6,7 +6,7 @@
 #include <iterator>
 #include <windows.h>
 #include <TCHAR.h>
-#include "HeaderPixel.h"
+#include "Pixel.h"
 
 void Pixel::SetPixel(uint8_t r, uint8_t g, uint8_t b)
 {
@@ -33,6 +33,11 @@ uint8_t Pixel::GetBlue()
 void Pixel::PrintPixel(std::ostream& out)
 {
     out << "(" << (unsigned)red << "," << (unsigned)green << "," << (unsigned)blue << ")" << " ";
+}
+
+void Pixel::PrintPixel() // Отладочный метод
+{
+    std::cout << "(" << (unsigned)red << "," << (unsigned)green << "," << (unsigned)blue << ")" << " ";
 }
 
 void Pixel::PixelToImage(std::ostream& out)

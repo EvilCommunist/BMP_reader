@@ -18,27 +18,27 @@
     <ClCompile Include="Photon2.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="SourcePixel.cpp">
+    <ClCompile Include="Pixel.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="SourceMatrix.cpp">
+    <ClCompile Include="Matrix.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="SourceBMPdata.cpp">
+    <ClCompile Include="BMPdata.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="HeaderStruct.h">
+    <ClInclude Include="Struct.h">
       <Filter>Исходные файлы</Filter>
     </ClInclude>
-    <ClInclude Include="HeaderPixel.h">
+    <ClInclude Include="Pixel.h">
       <Filter>Исходные файлы</Filter>
     </ClInclude>
-    <ClInclude Include="HeaderMatrix.h">
+    <ClInclude Include="Matrix.h">
       <Filter>Исходные файлы</Filter>
     </ClInclude>
-    <ClInclude Include="HeaderBMPdata.h">
+    <ClInclude Include="BMPdata.h">
       <Filter>Исходные файлы</Filter>
     </ClInclude>
   </ItemGroup>

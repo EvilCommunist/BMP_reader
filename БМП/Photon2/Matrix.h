@@ -7,8 +7,7 @@
 #include <windows.h>
 #include <TCHAR.h>
 #include <vector>
-#include "HeaderPixel.h"
-#include "SourcePixel.cpp"
+#include "Pixel.h"
 
 class Matrix {
 private:
@@ -22,8 +21,10 @@ private:
     int GetCoord(int i, int j) const;
 
 public:
-
+    Matrix(){
+    }
     Matrix(size_t widthread, size_t heightread);
+    void setMatrix(Matrix mat);
 
     void SetPixel(unsigned int i, unsigned int j, Pixel pix);
     Pixel GetPixel(unsigned int i, unsigned int j) const;
