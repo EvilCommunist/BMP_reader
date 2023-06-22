@@ -23,6 +23,7 @@ public:
 	void setColorMatrix(Matrix mat);
 
 	Matrix getMatrix();
+	HeaderReader getHeader();
 
 	void fillBMP(std::ostream& out);
 };

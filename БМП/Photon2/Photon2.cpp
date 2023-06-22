@@ -126,8 +126,8 @@ BMPdata filterCrop(Matrix mat, size_t newwidth, size_t newheight, HeaderReader h
             newmat.SetPixel(i, j, mat.GetPixel(i, j));
         }
     }
-    newpic.setColorMatrix(newmat); 
-    
+    newpic.setColorMatrix(newmat);
+   
     return newpic;
 }
 
@@ -136,6 +136,7 @@ BMPdata filterGs(Matrix mat, HeaderReader h)
     BMPdata newpic;
     newpic.setHeader(h);
     Matrix newmat = mat;
+
     for (size_t i = 0; i < mat.GetMatHeight(); ++i) {
         for (size_t j = 0; j < mat.GetMatWidth(); ++j) {
             Pixel pix;
@@ -144,14 +145,16 @@ BMPdata filterGs(Matrix mat, HeaderReader h)
         }
     }
     newpic.setColorMatrix(newmat);
+   
     return newpic;
 }
 
 BMPdata addFilters(std::vector<std::string> arg1, Matrix matr, HeaderReader h) 
 {
     std::vector<std::string> arg = arg1;
-    Matrix matrix = matr;
     BMPdata newpic;
+    newpic.setHeader(h);
+    newpic.setColorMatrix(matr);
     for (size_t i = 0; i<arg.size(); i++)
     {
         if (arg[i][0]=='-') // InitializeToken
@@ -159,12 +162,12 @@ BMPdata addFilters(std::vector<std::string> arg1, Matrix matr, HeaderReader h)
             char c = initializeargument(arg[i]);
             switch (c)
             {
-            case 'c': newpic = filterCrop(matrix, stod(arg[i + 1]), stod(arg[i + 2]), h); i += 2; break;
-            case 'g': newpic = filterGs(matrix, h); break;
+            case 'c': newpic = filterCrop(newpic.getMatrix(), stod(arg[i + 1]), stod(arg[i + 2]), newpic.getHeader()); i += 2; break;
+            case 'g': newpic = filterGs(newpic.getMatrix(), newpic.getHeader()); break;
             }
         }
     }
-
+   
     return newpic;
 }
 
@@ -238,7 +241,7 @@ int main (int files, char* data[])
     }
 
     std::ofstream output;
-    output.open(data[2], output.out);
+    output.open(data[2], output.binary | output.out);
 
     printMatrix(openAndFillImage(data[1], arg), output);
  }

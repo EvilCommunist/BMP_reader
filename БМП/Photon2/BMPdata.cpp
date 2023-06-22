@@ -26,6 +26,10 @@ Matrix BMPdata::getMatrix()
 {
 	return colours;
 }
+HeaderReader BMPdata::getHeader()
+{
+	return bmpHead;
+}
 
 void BMPdata::fillBMP(std::ostream& out)
 {
