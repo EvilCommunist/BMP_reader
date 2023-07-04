@@ -40,7 +40,9 @@ void Pixel::PrintPixel() // Отладочный метод
     std::cout << "(" << (unsigned)red << "," << (unsigned)green << "," << (unsigned)blue << ")" << " ";
 }
 
-void Pixel::PixelToImage(std::ostream& out)
+void Pixel::PixelToImage(std::ostream& out) // Бинарное заполнение согласно формату БМП
 {
-    out << blue << green << red; // Бинарное заполнение согласно формату БМП
+    out.write((char*)&(blue), sizeof(uint8_t));
+    out.write((char*)&(green), sizeof(uint8_t));
+    out.write((char*)&(red), sizeof(uint8_t));
 }
