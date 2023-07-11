@@ -5,7 +5,7 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>..\Pazhiloy\lenna.bmp ..\Pazhiloy\test2.bmp -smooth 9</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>..\Pazhiloy\lenna.bmp ..\Pazhiloy\test2.bmp -smooth 7</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>

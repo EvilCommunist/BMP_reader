@@ -23,12 +23,11 @@ char initializeargument(std::string arg)
 
 Matrix filterCrop(Matrix mat, size_t newwidth, size_t newheight)
 {
-    size_t dx = mat.GetMatWidth() - newwidth - 1;
+ //   size_t dx = mat.GetMatWidth() - newwidth - 1;
     size_t dy = mat.GetMatHeight() - newheight - 1;
     Matrix newmat(newwidth, newheight);
     for (size_t i = 0; i < newmat.GetMatHeight(); i++) {
         for (size_t j = 0; j < newmat.GetMatWidth(); ++j) {
-            // newmat.SetPixel(i, j, mat.GetPixel(dy + i, dx + j));
             newmat.SetPixel(i, j, mat.GetPixel(i + dy, j));
         }
     }
@@ -146,7 +145,51 @@ Matrix filterSmooth(Matrix mat, int zone) { // Размытие работает, но изображение
 }
 
 
-//Фильтр уточнения границ, см. лист
+Pixel newPix(Matrix mat)
+{
+    Pixel newpix{};
+    int sumRed=mat.GetPixel(1,1).GetRed()*5, sumGreen = mat.GetPixel(1, 1).GetGreen() * 5, sumBlue = mat.GetPixel(1, 1).GetBlue() * 5;
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0+(i+1)%2; j < 3; j++) {
+           sumRed-= mat.GetPixel(i, j).GetRed();
+           sumGreen -= mat.GetPixel(i, j).GetGreen();
+           sumBlue -= mat.GetPixel(i, j).GetBlue();
+        }
+    }
+    if (sumRed > 255)
+        sumRed = 255;
+    if (sumBlue > 255)
+        sumBlue = 255;
+    if (sumGreen > 255)
+        sumGreen = 255;
+    if (sumRed > 0)
+        sumRed = 0;
+    if (sumBlue > 0)
+        sumBlue = 0;
+    if (sumGreen > 0)
+        sumGreen = 0;
+    newpix.SetPixel(sumRed,sumGreen,sumBlue);
+    return newpix;
+}
+
+Matrix filterBorder(Matrix mat)
+{
+    Matrix newmat=mat;
+    for (int i=1; i<mat.GetMatHeight()-1;i++){
+        for (int j =1; j<mat.GetMatWidth()-1;j++){
+            //Coordinate currentPix{ i, j }, upleftCoord{ i-1, j-1 }, downrightCoord{ i+1, j+1 };
+            Matrix zonemat(3,3);
+            for (int k = -1; k < 2; k++) {
+                for (int g = -1; g < 2;g++) {
+                    zonemat.SetPixel(k + 1, g + 1, mat.GetPixel(i+k, j+g));
+                }
+            }            
+            newmat.SetPixel(i, j, newPix(zonemat));
+        }
+    }
+
+    return newmat;
+}
 
 
 Matrix addFilters(std::vector<std::string> arg1, Matrix matr)
@@ -163,6 +206,7 @@ Matrix addFilters(std::vector<std::string> arg1, Matrix matr)
             case 'c': matrix = filterCrop(matrix, stod(arg[i + 1]), stod(arg[i + 2])); i += 2; break;
             case 'g': matrix = filterGs(matrix); break;
             case 's': matrix = filterSmooth(matrix, stod(arg[i + 1])); i++; break; // Blure
+            case 'b': matrix = filterBorder(matrix);
             }
         }
     }

@@ -20,7 +20,10 @@ Matrix filterCrop(Matrix mat, size_t newwidth, size_t newheight);
 
 Matrix filterGs(Matrix mat);
 
-Matrix makeSmoothPixel(Matrix mat);
+Matrix makeSmoothPixel(Matrix mat, Coordinate cp, Coordinate ulp);
 Matrix filterSmooth(Matrix mat, int zone);
+
+Pixel newPix(Matrix mat);
+Matrix filterBorder(Matrix mat);
 
 Matrix addFilters(std::vector<std::string> arg1, Matrix matr);
