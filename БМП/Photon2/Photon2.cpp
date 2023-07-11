@@ -11,134 +11,9 @@
 #include "Pixel.h"
 #include "Matrix.h"
 #include "Size.h"
-
-using byte = unsigned char;
-
-void readBytes(std::ifstream& stream, byte* begin, std::streamsize count) {
-    bool success{};
-
-    if (stream.read(reinterpret_cast<char*>(begin), count)) {
-        success = stream.gcount() == count;
-    }
-
-    if (!success) {
-        throw std::runtime_error("read failed");
-    }
-}
-
-template <class T> 
-T read(std::ifstream& stream) {
-    T tmp;
-    readBytes(stream, reinterpret_cast<byte*>(&tmp), sizeof(T));
-    return tmp;
-}
-
-template <class T, size_t head>
-std::array<T, head> readArray(std::ifstream& stream) {
-    std::array<T, head> array;
-    byte* tmpAsBytes = reinterpret_cast<byte*>(array.data());
-    readBytes(stream, tmpAsBytes, sizeof(T) * head);
-    return array;
-}
-
-
-template <class T>
-T takeNextField(std::ifstream& stream) {
-    const auto val = read<T>(stream);
-    return val;
-}
-
- //return смещение до начала пиксельных данных
- 
-uint32_t takeHeadInf(std::ifstream& input) {
-    const auto sign = readArray<uint8_t, 2>(input);
-    std::cout << "Сигнатура: " << sign.front() << sign.back() << std::endl;
-
-    takeNextField<uint32_t>(input);
-
-    const auto reserved = readArray<uint16_t, 2>(input);
-    std::cout << "Зарезервированные поля (ожидается 0): " << reserved.front() << " " << reserved.back() << std::endl;
-
-    return takeNextField<uint32_t>(input);
-}
-
-Size takeBitMapInfo(std::ifstream& input) {
-    uint32_t struck = takeNextField<uint32_t>(input);
-
-    if ((struck != 12) && (struck != 40) && (struck != 108) && (struck != 124)) // Проверка на валидность типа БМП
-        throw std::runtime_error("unknown BMP type");
-
-    switch (struck)
-    {
-    case 12:
-        throw std::runtime_error("cannot read this type of BMP (BITMAPCOREHEADER)");
-        break;
-    case 40:
-        std::cout << "Имя структуры: BITMAPINFOHEADER, файл корректный" << std::endl;
-        break;
-    case 108:
-        throw std::runtime_error("cannot read this type of BMP (BITMAPV4HEADER)");
-        break;
-    case 124:
-        throw std::runtime_error("cannot read this type of BMP (BITMAPV5HEADER)");
-        break;
-    }
-
-    const auto width = takeNextField<int32_t>(input);
-    const auto height = takeNextField<int32_t>(input);
-    return { width, height };
-}
-
-char initializeargument(std::string arg)
-{
-    // В виду наличия аргументов с разными первыми буквами ограничимся выводом первой буквы аргумента
-    return arg[1];
-}
-
-Matrix filterCrop(Matrix mat, size_t newwidth, size_t newheight)
-{
-    Matrix newmat(newwidth, newheight);
-    for (size_t i = 0; i < newmat.GetMatHeight(); ++i) {
-        for (size_t j = 0; j < newmat.GetMatWidth(); ++j) {
-            newmat.SetPixel(i, j, mat.GetPixel(i, j));
-        }
-    }
-    return newmat;
-}
-
-Matrix filterGs(Matrix mat)
-{
-    Matrix newmat = mat;
-    for (size_t i = 0; i < mat.GetMatHeight(); ++i) {
-        for (size_t j = 0; j < mat.GetMatWidth(); ++j) {
-            Pixel pix;
-            pix.SetPixel(mat.GetPixel(i, j).GetRed() * 0.299, mat.GetPixel(i, j).GetGreen() * 0.587, mat.GetPixel(i, j).GetBlue() * 0.114);
-            newmat.SetPixel(i, j, pix);
-        }
-    }
-    return newmat;
-}
-
-
-Matrix addFilters(std::vector<std::string> arg1, Matrix matr) 
-{
-    std::vector<std::string> arg = arg1;
-    Matrix matrix = matr;
-    for (size_t i = 0; i < arg.size(); i++)
-    {
-        if (arg[i][0] == '-') // InitializeToken
-        {
-            char c = initializeargument(arg[i]);
-            switch (c)
-            {
-            case 'c': matrix = filterCrop(matrix, stod(arg[i + 1]), stod(arg[i + 2])); i += 2; break;
-            case 'g': matrix = filterGs(matrix); break;
-            }
-        }
-    }
-
-    return matrix;
-}
+#include "Foundation.h"
+#include"Filters.h"
+#include "ImageInf.h"
 
 Matrix openAndFillImage(const std::string& filepath, std::vector<std::string> arg) // Считывание цветов в матрицу
 {
@@ -159,7 +34,7 @@ Matrix openAndFillImage(const std::string& filepath, std::vector<std::string> ar
 
     input.seekg(pixelsOffset);
 
-    uint8_t r, g, b;
+    uint8_t r=0, g=0, b=0;
 
     Pixel pix;
 
@@ -167,27 +42,17 @@ Matrix openAndFillImage(const std::string& filepath, std::vector<std::string> ar
 
     for (size_t i = 0; i < size.height; ++i) {
         for (size_t j = 0; j < size.width; ++j) {
-            b = (unsigned)read<uint8_t>(input);
-            g = (unsigned)read<uint8_t>(input);
-            r = (unsigned)read<uint8_t>(input);
+            b = (unsigned)read<char>(input);
+            g = (unsigned)read<char>(input);
+            r = (unsigned)read<char>(input);
             pix.SetPixel(r, g, b);
             mat.SetPixel(i, j, pix);
         }
-        for (size_t pad = 0; pad != paddingBytes; ++pad) {
+        for (size_t pad = 0; pad != paddingBytes; ++pad) { // Ориентация сюда
             read<uint8_t>(input);
         }
     }
     return addFilters(arg, mat);
-}
-
-HeaderReader makeHeader(Matrix mat)
-{
-    HeaderReader h;
-    h.width = mat.GetMatWidth();
-    h.height = mat.GetMatHeight();
-    h.pixDataSize = h.width * h.height * h.bpp/8;
-    h.fileSize = h.pixDataSize + h.paddToData;
-    return h;
 }
 
 void printMatrix(const Matrix& matrix, std::ostream& out) // Вывод изображения в файл (надо доработать)
@@ -213,10 +78,18 @@ void printMatrix(const Matrix& matrix, std::ostream& out) // Вывод изоб
     out.write((char*)&bmpHead.colorDataSize, sizeof(uint32_t));
     out.write((char*)&bmpHead.cellsNum, sizeof(uint32_t));
  
+    Pixel prt1;
+    size_t paddCounter = mat.GetMatWidth()*3;
     for (size_t i = 0; i < mat.GetMatHeight(); i++) {
         for(size_t j = 0; j < mat.GetMatWidth(); j++){
-            mat.GetPixel(i, j).PixelToImage(out);         // Реализовать ввод паддинговых значений!!!!!
+            prt1 = mat.GetPixel(i, j);
+            prt1.PixelToImage(out);// Рассинхрон значений пикселей на втрой строчке заполнения (раньше, 240 строчка в файле), проверить паддинговые значения!!!!
         }
+        while (paddCounter % 4 != 0) {
+            out.write((char*)&bmpHead.reserve1, sizeof(uint8_t));
+            paddCounter++;
+        }
+        paddCounter = mat.GetMatWidth() * 3;
     }
 }
 
@@ -227,43 +100,57 @@ void errorChecker(const std::string& filepath, const std::string& filepath1) // 
     std::ifstream input1;
     input1.open(filepath1, input.binary | input.in);
     std::ofstream out;
-    out.open("C:\\Users\\AT241\\source\\repos\\Photon2\\Pazhiloy\\younoturrr.txt", out.out);
-        out << takeNextField<int8_t>(input) << " ||| ";
-        out << takeNextField<int8_t>(input1) << std::endl;
-        out << takeNextField<int8_t>(input) << " ||| ";
-        out << takeNextField<int8_t>(input1) << std::endl;
-        out << takeNextField<int32_t>(input) << " ||| ";
-        out << takeNextField<int32_t>(input1) << std::endl;
-        out << takeNextField<int32_t>(input) << " ||| ";
-        out << takeNextField<int32_t>(input1) << "   Резервированные поля" << std::endl;
-        out << takeNextField<int32_t>(input) << " ||| ";
-        out << takeNextField<int32_t>(input1) << std::endl;
-        out << takeNextField<int32_t>(input) << " ||| ";
-        out << takeNextField<int32_t>(input1) << std::endl;//Смещенеи данных
-        out << takeNextField<int32_t>(input) << " ||| ";
-        out << takeNextField<int32_t>(input1) << std::endl;
-        out << takeNextField<int32_t>(input) << " ||| ";
-        out << takeNextField<int32_t>(input1) << std::endl;
-        out << takeNextField<int16_t>(input) << " ||| ";
-        out << takeNextField<int16_t>(input1) << std::endl;
-        out << takeNextField<int16_t>(input) << " ||| ";
-        out << takeNextField<int16_t>(input1) << std::endl;
-        out << takeNextField<int32_t>(input) << " ||| ";
-        out << takeNextField<int32_t>(input1) << std::endl;
-        out << takeNextField<int32_t>(input) << " ||| ";
-        out << takeNextField<int32_t>(input1) << std::endl;
-        out << takeNextField<int32_t>(input) << " ||| ";
-        out << takeNextField<int32_t>(input1) << std::endl;
-        out << takeNextField<int32_t>(input) << " ||| ";
-        out << takeNextField<int32_t>(input1) << std::endl;
-        out << takeNextField<int32_t>(input) << " ||| ";
-        out << takeNextField<int32_t>(input1) << std::endl;
-        out << takeNextField<int32_t>(input) << " ||| ";
-        out << takeNextField<int32_t>(input1) << std::endl;
-        out << takeNextField<int32_t>(input) << " ||| ";
-        out << takeNextField<int32_t>(input1) << std::endl;
-        out << takeNextField<int32_t>(input) << " ||| ";
-        out << takeNextField<int32_t>(input1) << std::endl;
+    out.open("C:\\Users\\AT241\\source\\repos\\Photon2\\Pazhiloy\\younoturrr.txt");
+        takeNextField<int8_t>(input);
+        takeNextField<int8_t>(input1);
+        takeNextField<int8_t>(input);
+        takeNextField<int8_t>(input1);
+        takeNextField<int32_t>(input);
+        takeNextField<int32_t>(input1);
+        takeNextField<int32_t>(input);
+        takeNextField<int32_t>(input1);
+        takeNextField<int32_t>(input);
+        takeNextField<int32_t>(input1);
+        takeNextField<int32_t>(input);
+        takeNextField<int32_t>(input1);//Смещенеи данных
+        takeNextField<int32_t>(input);
+        takeNextField<int32_t>(input1);
+        takeNextField<int32_t>(input);
+        takeNextField<int32_t>(input1);
+        takeNextField<int16_t>(input);
+        takeNextField<int16_t>(input1);
+        takeNextField<int16_t>(input);
+        takeNextField<int16_t>(input1);
+        takeNextField<int32_t>(input);
+        takeNextField<int32_t>(input1);
+        takeNextField<int32_t>(input);
+        takeNextField<int32_t>(input1);
+        takeNextField<int32_t>(input);
+        takeNextField<int32_t>(input1);
+        takeNextField<int32_t>(input);
+        takeNextField<int32_t>(input1);
+        takeNextField<int32_t>(input);
+        takeNextField<int32_t>(input1);
+        takeNextField<int32_t>(input);
+        takeNextField<int32_t>(input1);
+        for (int i = 0; i < 1024; i++) {
+            auto printRGB = [](auto& in, auto& out) {
+                unsigned r = takeNextField<BYTE>(in);
+                unsigned g = takeNextField<BYTE>(in);
+                unsigned b = takeNextField<BYTE>(in);
+
+                if (!in.good()) {
+                    throw std::runtime_error("EOF");
+                }
+                out << "[" << r << ", " << g << ", " << b << "]";
+            };
+
+            out << i << " ";
+            printRGB(input, out);
+            out << " ||| ";
+            printRGB(input1, out);
+            out << std::endl;
+        }
 }
 
 int main(int files, char* data[])
@@ -277,7 +164,7 @@ int main(int files, char* data[])
     }
 
     std::ofstream output;
-    output.open(data[2], output.out);
+    output.open(data[2], std::ios::binary);
 
     printMatrix(openAndFillImage(data[1], arg), output);
     errorChecker(data[1], data[2]);

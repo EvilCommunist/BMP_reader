@@ -127,11 +127,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Filters.cpp" />
+    <ClCompile Include="Foundation.cpp" />
+    <ClCompile Include="HeaderInf.cpp" />
     <ClCompile Include="Photon2.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="Pixel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Coordinate.h" />
+    <ClInclude Include="Filters.h" />
+    <ClInclude Include="Foundation.h" />
+    <ClInclude Include="ImageInf.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Pixel.h" />
     <ClInclude Include="Size.h" />

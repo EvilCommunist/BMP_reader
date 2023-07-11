@@ -12,17 +12,16 @@
 class Matrix {
 private:
 
-    std::vector<Pixel> image;
+    std::vector<Pixel> image{};
 
-    size_t width;
-    size_t height;
+    size_t width{};
+    size_t height{};
 
     bool CoordIsValid(unsigned int i, unsigned int j) const;
     int GetCoord(int i, int j) const;
 
 public:
-    Matrix(){
-    }
+    Matrix(){}
     Matrix(size_t widthread, size_t heightread);
     void setMatrix(Matrix mat);
 

@@ -18,7 +18,7 @@ int Matrix::GetCoord(int i, int j) const
 {
     if (CoordIsValid(i, j))
     {
-        return i * width + j;
+        return (i * width + j);
     }
     else
     {
