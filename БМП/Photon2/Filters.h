@@ -26,4 +26,7 @@ Matrix filterSmooth(Matrix mat, int zone);
 Pixel newPix(Matrix mat);
 Matrix filterBorder(Matrix mat);
 
+Pixel contrFunc(Pixel pix);
+Matrix filterContrast(Matrix mat);
+
 Matrix addFilters(std::vector<std::string> arg1, Matrix matr);
