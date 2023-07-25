@@ -5,6 +5,8 @@
 #include <array>
 #include <iterator>
 #include <windows.h>
+#define _USE_MATH_DEFINES
+#include <math.h>
 #include <TCHAR.h>
 #include <vector>
 #include "Struct.h"
@@ -23,8 +25,7 @@ char initializeargument(std::string arg)
 }
 
 
-Matrix filterCrop(Matrix mat, size_t newwidth, size_t newheight)
-{
+Matrix filterCrop(Matrix mat, size_t newwidth, size_t newheight){
  //   size_t dx = mat.GetMatWidth() - newwidth - 1;
     size_t dy = mat.GetMatHeight() - newheight - 1;
     Matrix newmat(newwidth, newheight);
@@ -37,8 +38,7 @@ Matrix filterCrop(Matrix mat, size_t newwidth, size_t newheight)
 }
 
 
-Matrix filterGs(Matrix mat)
-{
+Matrix filterGs(Matrix mat){
     Matrix newmat = mat;
     for (size_t i = 0; i < mat.GetMatHeight(); ++i) {
         for (size_t j = 0; j < mat.GetMatWidth(); ++j) {
@@ -121,8 +121,7 @@ Matrix filterSmooth(Matrix mat, int zone) { // Размытие работает, но изображение
 }
 
 
-Pixel newPix(Matrix mat)
-{
+Pixel newPix(Matrix mat){
     Pixel newpix{};
     int sumRed=mat.GetPixel(1,1).GetRed()*5, sumGreen = mat.GetPixel(1, 1).GetGreen() * 5, sumBlue = mat.GetPixel(1, 1).GetBlue() * 5;
     for (int i = 0; i < 3; i++) {
@@ -148,8 +147,7 @@ Pixel newPix(Matrix mat)
     return newpix;
 }
 
-Matrix filterBorder(Matrix mat)
-{
+Matrix filterBorder(Matrix mat){
     Matrix newmat=mat;
     for (int i=1; i<mat.GetMatHeight()-1;i++){
         for (int j =1; j<mat.GetMatWidth()-1;j++){
@@ -170,13 +168,9 @@ Matrix filterBorder(Matrix mat)
 Pixel contrFunc(Pixel pix){
     Pixel pixel=pix;
     int pixRed=pixel.GetRed(), pixGreen = pixel.GetGreen(), pixBlue = pixel.GetBlue();
-    /*pixGreen = pixGreen * 1.4 - 15;
-    pixBlue = pixBlue * 1.4 - 15;
-    pixRed = pixRed * 1.4 - 15;*/
-    pixGreen = 255-  pixGreen;
-    pixBlue = 255- pixBlue;
-    pixRed = 255-  pixRed ;
-
+    pixGreen = pixGreen * 1.5 - 22;
+    pixBlue = pixBlue * 1.5 - 22;
+    pixRed = pixRed * 1.5 - 22;
     if (pixRed > 255)
         pixRed = 255;
     if (pixRed < 0)
@@ -206,6 +200,98 @@ Matrix filterContrast(Matrix mat){
 }
 
 
+Matrix changeMatrixDown(int i, int j, Matrix mat)
+{
+    Matrix matr = mat;
+    //Нижнетреугольное преобразование
+    for (int k = i; k < mat.GetMatHeight() - 1; k++)
+    {
+        long double koeff = -matr.GetValue(k + 1, j) / matr.GetValue(i, j);
+        for (int n = j; n < matr.GetMatWidth(); n++)
+        {
+            long double newvalue = koeff * matr.GetValue(i, n) + matr.GetValue(k + 1, n);
+            matr.SetValue(k + 1, n, newvalue);
+        }
+    }
+    return matr;
+}
+
+std::vector<long double> gauss(Matrix mat) {
+    std::vector<long double> ans{ 0,0,0,0 };
+    for (int i = 0; i < mat.GetMatHeight(); i++)
+    {
+        for (int j = 0; j < mat.GetMatWidth(); j++)
+        {
+            std::cout << mat.GetValue(i, j) << "  ";
+        }
+        std::cout << std::endl;
+    }
+    for (int i = 0; i < mat.GetMatHeight() - 1; i++)
+    {
+        mat = changeMatrixDown(i, i, mat);
+    }
+    short int k = 3;
+    long double buff{};
+    for (int i = 4 - 1; i >= 0; i--) {
+        buff = 0;
+        for (int j = 4; j > i; j--) {
+            buff += mat.GetValue(i, j - 1) * ans[j - 1];
+        }
+        ans[i] = (mat.GetValue(i, 4) - buff) / mat.GetValue(i, i);
+    }
+    return ans;
+}
+
+Matrix transpone(Matrix mat, short int angle1) {
+    long double angle =  angle1 *M_PI/180;
+    Matrix transponedImage(cos(angle) * mat.GetMatHeight() + cos(M_PI / 2 - angle) * mat.GetMatWidth(), sin(angle) * mat.GetMatHeight() + cos(angle) * mat.GetMatWidth());
+    for (int i = 0; i < transponedImage.GetMatHeight(); i++) {
+        for (int j = 0; j < transponedImage.GetMatWidth(); j++) {
+            Pixel black{};
+            transponedImage.SetPixel(i, j, black);
+        }
+    }
+    Coordinate leftTop{ 0, mat.GetMatHeight() * cos(angle) - 1 }, rightTop{ mat.GetMatHeight() * sin(angle) - 1, 0 }, botRight{ transponedImage.GetMatWidth() - 1, mat.GetMatWidth() * cos(M_PI / 2 - angle) - 1 }, botLeft{ mat.GetMatWidth() * cos(angle) - 1, transponedImage.GetMatHeight() - 1 },
+               rT{ mat.GetMatWidth()-1, 0 }, bR{ mat.GetMatWidth()-1 , mat.GetMatHeight()-1 }, bL{ 0, mat.GetMatHeight()-1 };
+    std::vector<Coordinate> newCord {leftTop, rightTop, botRight, botLeft}; // Переназначить точки!!!!
+    std::vector<Coordinate> oldCord{ {0,0}, rT, bR, bL};
+    Matrix a_b_SLAU(5,4);
+    
+    //fillmatrix_x
+    for (int i = 3; i >=0; i--) {
+        a_b_SLAU.SetValue(i, 0, newCord[3-i].width);
+        a_b_SLAU.SetValue(i, 1, newCord[3-i].height);
+        a_b_SLAU.SetValue(i, 2, newCord[3-i].height* newCord[3-i].width);
+        a_b_SLAU.SetValue(i, 3, 1);
+        a_b_SLAU.SetValue(i, 4, oldCord[3-i].width);
+    }
+    std::vector<long double> angleValues_x{ 0,0,0,0 }, angleValues_y{0,0,0,0};
+    angleValues_x = gauss(a_b_SLAU);
+
+    //fillmatrix_y
+    for (int i = 3; i >=0; i--) {
+        a_b_SLAU.SetValue(i, 0, newCord[3-i].width);
+        a_b_SLAU.SetValue(i, 1, newCord[3-i].height);
+        a_b_SLAU.SetValue(i, 2, newCord[3-i].height * newCord[3-i].width);
+        a_b_SLAU.SetValue(i, 3, 1);
+        a_b_SLAU.SetValue(i, 4, oldCord[3-i].height);
+    }
+    angleValues_y = gauss(a_b_SLAU);
+
+    for (int i = 0; i < transponedImage.GetMatHeight(); i++) {
+        for (int j = 0; j < transponedImage.GetMatWidth(); j++) {
+            int i1=0, j1=0;// Получить дельты на 4 пикселя и смешать их
+            j1 = j * angleValues_x[0] + i * angleValues_x[1] + j*i* angleValues_x[2] + angleValues_x[3]+0.5;
+            i1 = j * angleValues_y[0] + i * angleValues_y[1] + j * i * angleValues_y[2] + angleValues_y[3]+0.5;
+            if((i1>=0)&&(i1<mat.GetMatHeight())&& (j1 >= 0) && (j1 < mat.GetMatWidth()))
+                transponedImage.SetPixel(i, j, mat.GetPixel(i1, j1));
+        }
+    }
+
+    return transponedImage;
+}
+
+
 Matrix addFilters(std::vector<std::string> arg1, Matrix matr)
 {
     std::vector<std::string> arg = arg1;
@@ -222,6 +308,7 @@ Matrix addFilters(std::vector<std::string> arg1, Matrix matr)
             case 's': matrix = filterSmooth(matrix, stod(arg[i + 1])); i++; break; // Blure
             case 'b': matrix = filterBorder(matrix);
             case 'o': matrix = filterContrast(matrix);
+            case 't': matrix = transpone(matrix, stod(arg[i + 1]));
             }
         }
     }

@@ -13,6 +13,7 @@ class Matrix {
 private:
 
     std::vector<Pixel> image{};
+    std::vector<long double> matrix{};
 
     size_t width{};
     size_t height{};
@@ -27,6 +28,9 @@ public:
 
     void SetPixel(unsigned int i, unsigned int j, Pixel pix);
     Pixel GetPixel(unsigned int i, unsigned int j) const;
+
+    void SetValue(unsigned int i, unsigned int j, long double value);
+    long double GetValue(unsigned int i, unsigned int j);
 
     size_t GetMatHeight();
     size_t GetMatWidth();

@@ -26,33 +26,36 @@ int Matrix::GetCoord(int i, int j) const
     }
 }
 
-Matrix::Matrix(size_t widthread, size_t heightread)
-{
+Matrix::Matrix(size_t widthread, size_t heightread){
     width = widthread;
     height = heightread;
     image.resize(width * height);
+    matrix.resize(width * height);
 }
-void Matrix::setMatrix(Matrix mat)
-{
+void Matrix::setMatrix(Matrix mat){
     image.resize(mat.GetMatWidth()* mat.GetMatHeight());
+    matrix.resize(mat.GetMatWidth() * mat.GetMatHeight());
     width = mat.GetMatWidth();
     height = mat.GetMatHeight();
 }
 
-void Matrix::SetPixel(unsigned int i, unsigned int j, Pixel pix)
-{
+void Matrix::SetPixel(unsigned int i, unsigned int j, Pixel pix){
     image[GetCoord(i, j)] = pix;
 }
-Pixel Matrix::GetPixel(unsigned int i, unsigned int j) const
-{
+Pixel Matrix::GetPixel(unsigned int i, unsigned int j) const{
     return image[GetCoord(i, j)];
 }
 
-size_t Matrix::GetMatHeight()
-{
+void Matrix::SetValue(unsigned int i, unsigned int j, long double value){
+    matrix[GetCoord(i, j)] = value;
+}
+long double Matrix::GetValue(unsigned int i, unsigned int j){
+    return matrix[GetCoord(i, j)];
+}
+
+size_t Matrix::GetMatHeight(){
     return height;
 }
-size_t Matrix::GetMatWidth()
-{
+size_t Matrix::GetMatWidth(){
     return width;
 }
