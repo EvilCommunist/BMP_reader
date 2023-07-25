@@ -218,14 +218,6 @@ Matrix changeMatrixDown(int i, int j, Matrix mat)
 
 std::vector<long double> gauss(Matrix mat) {
     std::vector<long double> ans{ 0,0,0,0 };
-    for (int i = 0; i < mat.GetMatHeight(); i++)
-    {
-        for (int j = 0; j < mat.GetMatWidth(); j++)
-        {
-            std::cout << mat.GetValue(i, j) << "  ";
-        }
-        std::cout << std::endl;
-    }
     for (int i = 0; i < mat.GetMatHeight() - 1; i++)
     {
         mat = changeMatrixDown(i, i, mat);
@@ -242,6 +234,21 @@ std::vector<long double> gauss(Matrix mat) {
     return ans;
 }
 
+Pixel midPix(Matrix mat, std::vector<Coordinate> zone, long double x, long double y) { // returns interpolated value
+    int b=0, g=0, r=0;
+    for (int i = 0; i < zone.size(); i++) {
+        if ((zone[i].height < mat.GetMatHeight()) && (zone[i].width < mat.GetMatWidth())) {
+            long double delta = abs((x - zone[i].width) * (y - zone[i].height));
+            b += mat.GetPixel(zone[i].height, zone[i].width).GetBlue()*delta;
+            g += mat.GetPixel(zone[i].height, zone[i].width).GetGreen()*delta;
+            r += mat.GetPixel(zone[i].height, zone[i].width).GetRed()*delta;
+        }
+    }
+    Pixel midpix {};
+    midpix.SetPixel(r, g, b);
+    return midpix;
+}
+
 Matrix transpone(Matrix mat, short int angle1) {
     long double angle =  angle1 *M_PI/180;
     Matrix transponedImage(cos(angle) * mat.GetMatHeight() + cos(M_PI / 2 - angle) * mat.GetMatWidth(), sin(angle) * mat.GetMatHeight() + cos(angle) * mat.GetMatWidth());
@@ -253,7 +260,7 @@ Matrix transpone(Matrix mat, short int angle1) {
     }
     Coordinate leftTop{ 0, mat.GetMatHeight() * cos(angle) - 1 }, rightTop{ mat.GetMatHeight() * sin(angle) - 1, 0 }, botRight{ transponedImage.GetMatWidth() - 1, mat.GetMatWidth() * cos(M_PI / 2 - angle) - 1 }, botLeft{ mat.GetMatWidth() * cos(angle) - 1, transponedImage.GetMatHeight() - 1 },
                rT{ mat.GetMatWidth()-1, 0 }, bR{ mat.GetMatWidth()-1 , mat.GetMatHeight()-1 }, bL{ 0, mat.GetMatHeight()-1 };
-    std::vector<Coordinate> newCord {leftTop, rightTop, botRight, botLeft}; // Переназначить точки!!!!
+    std::vector<Coordinate> newCord {leftTop, rightTop, botRight, botLeft};
     std::vector<Coordinate> oldCord{ {0,0}, rT, bR, bL};
     Matrix a_b_SLAU(5,4);
     
@@ -280,15 +287,18 @@ Matrix transpone(Matrix mat, short int angle1) {
 
     for (int i = 0; i < transponedImage.GetMatHeight(); i++) {
         for (int j = 0; j < transponedImage.GetMatWidth(); j++) {
-            int i1=0, j1=0;// Получить дельты на 4 пикселя и смешать их
+            long double i1 = 0, j1 = 0;
             j1 = j * angleValues_x[0] + i * angleValues_x[1] + j*i* angleValues_x[2] + angleValues_x[3]+0.5;
             i1 = j * angleValues_y[0] + i * angleValues_y[1] + j * i * angleValues_y[2] + angleValues_y[3]+0.5;
-            if((i1>=0)&&(i1<mat.GetMatHeight())&& (j1 >= 0) && (j1 < mat.GetMatWidth()))
-                transponedImage.SetPixel(i, j, mat.GetPixel(i1, j1));
+            if ((i1 >= 0) && (i1 < mat.GetMatHeight()) && (j1 >= 0) && (j1 < mat.GetMatWidth())){
+                Coordinate leftup{ i1,j1 }, rightup{ i1, j1 + 1 }, rightdown{ i1 + 1,j1 + 1 }, leftdown{i1+1, j1};
+                std::vector<Coordinate> interpolationzone{leftup, rightup, rightdown, leftdown};
+                transponedImage.SetPixel(i, j, midPix(mat, interpolationzone, i1, j1)); // Попробовать убрать циклы!!!
+            }
         }
     }
 
-    return transponedImage;
+    return transponedImage; // Примерно 2 минуты компиляется
 }
 
 
