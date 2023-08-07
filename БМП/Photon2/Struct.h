@@ -1,12 +1,5 @@
 #pragma once
 #include <iostream>
-#include <string>
-#include <fstream>
-#include <array>
-#include <iterator>
-#include <windows.h>
-#include <TCHAR.h>
-#include <vector>
 
 struct HeaderReader // «аполнение всех полей кроме размера файла и размера картинки автоматическое. «адача: рассчитать размер файла в байтах и пиксельных данных
 {

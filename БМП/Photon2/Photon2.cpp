@@ -1,11 +1,6 @@
 ﻿#pragma once
 #include <iostream>
-#include <string>
 #include <fstream>
-#include <array>
-#include <iterator>
-#include <windows.h>
-#include <TCHAR.h>
 #include <vector>
 #include "Struct.h"
 #include "Pixel.h"
@@ -135,9 +130,9 @@ void errorChecker(const std::string& filepath, const std::string& filepath1) // 
         takeNextField<int32_t>(input1);
         for (int i = 0; i < 1024; i++) {
             auto printRGB = [](auto& in, auto& out) {
-                unsigned r = takeNextField<BYTE>(in);
-                unsigned g = takeNextField<BYTE>(in);
-                unsigned b = takeNextField<BYTE>(in);
+                unsigned r = takeNextField<uint8_t>(in);
+                unsigned g = takeNextField< uint8_t>(in);
+                unsigned b = takeNextField<uint8_t>(in);
 
                 if (!in.good()) {
                     throw std::runtime_error("EOF");

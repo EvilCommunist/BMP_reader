@@ -1,13 +1,7 @@
 #pragma once
 #include <iostream>
-#include <string>
 #include <fstream>
 #include <array>
-#include <iterator>
-#include <windows.h>
-#include <TCHAR.h>
-#include <vector>
-
 using byte = unsigned char;
 
 void readBytes(std::ifstream& stream, byte* begin, std::streamsize count);

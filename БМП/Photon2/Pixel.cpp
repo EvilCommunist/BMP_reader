@@ -1,11 +1,6 @@
 #pragma once
 #include <iostream>
-#include <string>
 #include <fstream>
-#include <array>
-#include <iterator>
-#include <windows.h>
-#include <TCHAR.h>
 #include "Pixel.h"
 
 void Pixel::SetPixel(uint8_t r, uint8_t g, uint8_t b)

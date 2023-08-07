@@ -1,12 +1,6 @@
 #pragma once
 #include <iostream>
-#include <string>
 #include <fstream>
-#include <array>
-#include <iterator>
-#include <windows.h>
-#include <TCHAR.h>
-#include <vector>
 #include "Struct.h"
 #include "Pixel.h"
 #include "Matrix.h"

@@ -1,12 +1,7 @@
 #pragma once
 #include <iostream>
-#include <string>
 #include <fstream>
-#include <array>
-#include <iterator>
-#include <windows.h>
-#include <TCHAR.h>
-#include <vector>
+#include "Foundation.h"
 
 void readBytes(std::ifstream& stream, byte* begin, std::streamsize count) {
     bool success{};
