@@ -195,9 +195,9 @@ Matrix filterContrast(Matrix mat){
 }
 
 
-Matrix changeMatrixDown(int i, int j, Matrix mat)
+MatMatrix changeMatrixDown(int i, int j, MatMatrix mat)
 {
-    Matrix matr = mat;
+    MatMatrix matr = mat;
     //Нижнетреугольное преобразование
     for (int k = i; k < mat.GetMatHeight() - 1; k++)
     {
@@ -211,7 +211,7 @@ Matrix changeMatrixDown(int i, int j, Matrix mat)
     return matr;
 }
 
-std::vector<long double> gauss(Matrix mat) {
+std::vector<long double> gauss(MatMatrix mat) {
     std::vector<long double> ans{ 0,0,0,0 };
     for (int i = 0; i < mat.GetMatHeight() - 1; i++)
     {
@@ -257,7 +257,7 @@ Matrix transpone(Matrix mat, short int angle1) {
                rT{ mat.GetMatWidth()-1, 0 }, bR{ mat.GetMatWidth()-1 , mat.GetMatHeight()-1 }, bL{ 0, mat.GetMatHeight()-1 };
     std::vector<Coordinate> newCord {leftTop, rightTop, botRight, botLeft};
     std::vector<Coordinate> oldCord{ {0,0}, rT, bR, bL};
-    Matrix a_b_SLAU(5,4);
+    MatMatrix a_b_SLAU(5,4);
     
     //fillmatrix_x
     for (int i = 3; i >=0; i--) {
