@@ -1,0 +1,4 @@
+﻿  Photon2.cpp
+C:\Users\AT241\source\repos\Photon2\Photon2\Photon2.cpp(44,35): warning C4267: аргумент: преобразование из "size_t" в "unsigned int"; возможна потеря данных
+C:\Users\AT241\source\repos\Photon2\Photon2\Photon2.cpp(80,37): warning C4267: аргумент: преобразование из "size_t" в "unsigned int"; возможна потеря данных
+  Photon2.vcxproj -> C:\Users\AT241\source\repos\Photon2\x64\Debug\Photon2.exe
